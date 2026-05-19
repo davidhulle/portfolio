@@ -1,0 +1,112 @@
+==============================================================
+  PORTFOLIO 2026 — Registro de alterações por sessão de chat
+  Data: 2026-05-19
+==============================================================
+
+--------------------------------------------------------------
+1. HERO — Versão 2 como padrão
+--------------------------------------------------------------
+- Conteúdo e logo da V2 alinhados às especificações da V1
+  (layout centralizado, logo com máscara vermelha, mesmas dimensões).
+- Background da V2 passa a seguir o light/dark mode:
+  isDark ? '#0A0A0A' : '#ffffff'.
+- V2 definida como padrão permanente; toggle de versão removido.
+- V1 salva na memória do projeto para restauração futura
+  (mudar useState('v2') → useState('v1') em Hero.jsx).
+Arquivo: src/components/Hero.jsx
+
+--------------------------------------------------------------
+2. ABOUT — Cor dos labels de estatísticas no dark mode
+--------------------------------------------------------------
+- Textos "Expertise & Experiência", "Projetos entregues" e
+  "Avaliação da equipe" recebem color: #999 no dark mode.
+- isDark passado como prop para o componente filho StatRow
+  (corrigiu bug de tela em branco por escopo indevido).
+Arquivo: src/components/About.jsx
+
+--------------------------------------------------------------
+3. CONTACT (footer) — Labels e link de telefone
+--------------------------------------------------------------
+- Labels LINKEDIN, EMAIL, TELEFONE recebem color: #999 no dark
+  mode e color: #666 no light mode (via isDark).
+- Link do telefone alterado para WhatsApp:
+  href: 'https://wa.me/5527999220307'.
+- aria-label adicionado em todos os links do footer.
+Arquivo: src/components/Contact.jsx
+
+--------------------------------------------------------------
+4. ACESSIBILIDADE — WCAG 2.1 AA
+--------------------------------------------------------------
+- Auditoria completa do projeto:
+  · alt text descritivo em logos da Journey (Mercado Pago,
+    Itaú, Wine.com.br, Balaio Comunicação / Banestes).
+  · aria-label nos botões prev/next/dot de Projects.jsx.
+  · Chaves i18n adicionadas: projects.aria.prev/next/dot
+    (PT, EN, ES).
+  · font-size mínimo 12px em .tag-red (era 11px).
+  · @media (prefers-reduced-motion: reduce) adicionado ao
+    index.css, desativando animações globalmente.
+- Regra permanente de acessibilidade adicionada ao CLAUDE.md
+  cobrindo: contraste, imagens, elementos interativos,
+  hierarquia de headings, semântica HTML, tamanhos de fonte,
+  motion e foco visível.
+Arquivos: src/components/Journey.jsx, src/components/Projects.jsx,
+          src/i18n/translations.js, src/index.css, CLAUDE.md
+
+--------------------------------------------------------------
+5. NAVBAR MOBILE — Header e menu
+--------------------------------------------------------------
+a) Alinhamento do header mobile:
+   - Outer padding: '16px 24px 0' (igual ao header fixo).
+   - Inner padding: '16px 16px 16px 24px'.
+   - LangSelect size="md": height auto, padding '8px 12px'.
+
+b) Animações do menu mobile:
+   - Ícone hamburger → X: morph de path SVG via Framer Motion
+     (AnimatedMenuIcon com motion.path animando atributo d).
+   - Abertura: wave clip-path circle(0 → 150vmax) partindo
+     do centro do botão hamburger.
+   - Fechamento: wave reversa com ease deceleration.
+   - Itens do menu: stagger de entrada (delay 0.22 + i×0.055s)
+     e stagger reverso de saída (último sai primeiro).
+   - Top bar (LangSelect + botão fechar): fade-in com delay 0.18s.
+
+c) Origem dinâmica da wave:
+   - getBoundingClientRect() captura o centro exato do botão
+     hamburger no momento do clique.
+   - waveOrigin state armazena '${x}px ${y}px' para usar nas
+     três propriedades clipPath (initial / animate / exit).
+Arquivo: src/components/Navbar.jsx
+
+--------------------------------------------------------------
+6. NAVBAR MOBILE — Dropdown de idioma → Bottom Sheet
+--------------------------------------------------------------
+- Trigger no top bar do menu mobile substituído por botão
+  simples que abre um bottom sheet (não mais dropdown inline).
+- Bottom sheet:
+  · Slide-up com spring (stiffness 380, damping 40).
+  · Background sempre escuro (#1A1A1A).
+  · Drag handle pill no topo.
+  · Label "IDIOMA / LANGUAGE / IDIOMA" (chave nav.lang.title
+    adicionada nas 3 seções de translations.js).
+  · Opções com altura 56px (touch target adequado).
+  · Código da língua ativo em #EF3537, inativo em #ffffff.
+  · Nome do idioma em #ffffff.
+  · Backdrop com opacity 0.45 e tap-to-dismiss.
+  · Fecha automaticamente ao fechar o menu principal.
+- Dropdown desktop (LangSelect) mantido inalterado
+  estruturalmente, mas cores dos itens ajustadas para #ffffff
+  (removida opacidade 0.65/0.85 dos itens inativos).
+Arquivos: src/components/Navbar.jsx, src/i18n/translations.js
+
+--------------------------------------------------------------
+7. JOURNEY — Espaçamento entre título e timeline
+--------------------------------------------------------------
+- Mobile: marginTop da timeline area reduzido de 56px → 32px.
+- Desktop: gap do grid (coluna título × coluna timeline)
+  reduzido de 80px → 48px.
+Arquivo: src/components/Journey.jsx
+
+--------------------------------------------------------------
+FIM DO REGISTRO
+==============================================================

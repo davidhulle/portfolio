@@ -1,0 +1,436 @@
+@import "tailwindcss";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+
+/* ─── Custom Fonts ─────────────────────────────────────────── */
+@font-face {
+  font-family: 'ABCWhyteInktrap';
+  src: url('/fonts/ABCWhyteInktrapVariable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Network';
+  src: url('/fonts/Network-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'ABCWhyte';
+  src: url('/fonts/ABCWhyte-Thin.otf') format('opentype');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ABCWhyte';
+  src: url('/fonts/ABCWhyte-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ABCWhyte';
+  src: url('/fonts/ABCWhyte-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ABCWhyte';
+  src: url('/fonts/ABCWhyte-Book.otf') format('opentype');
+  font-weight: 450;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ABCWhyte';
+  src: url('/fonts/ABCWhyte-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ABCWhyte';
+  src: url('/fonts/ABCWhyte-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ABCWhyte';
+  src: url('/fonts/ABCWhyte-Black.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ABCWhyte';
+  src: url('/fonts/ABCWhyte-Heavy.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'ABCWhyteMono';
+  src: url('/fonts/ABCWhyteMono-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ─── Tailwind Theme Tokens ────────────────────────────────── */
+@theme {
+  --font-display: 'Network', cursive;
+  --font-heading: 'ABCWhyte', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  --color-black:     #0A0A0A;
+  --color-dark:      #101010;
+  --color-mid:       #1A1A1A;
+  --color-gray:      #666666;
+  --color-gray-light:#999999;
+  --color-crimson:   #9E0015;
+  --color-red:       #EF3537;
+  --color-red-light: #F5626C;
+  --color-offwhite:  #F5F2EE;
+  --color-white:     #FFFFFF;
+
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Design Tokens ────────────────────────────────────────── */
+:root {
+  --bg:           #F5F2EE;
+  --bg-secondary: #FFFFFF;
+  --bg-card:      #FFFFFF;
+  --bg-white:     #FFFFFF;
+  --text:         #101010;
+  --text-muted:   #666666;
+  --text-inv:     #FFFFFF;
+  --border:       rgba(16, 16, 16, 0.1);
+  --border-strong:rgba(16, 16, 16, 0.2);
+  --red:          #EF3537;
+  --crimson:      #9E0015;
+  --surface:      rgba(255,255,255,0.6);
+  --nav-bg:       rgba(245, 242, 238, 0.85);
+}
+
+[data-theme="dark"] {
+  --bg:           #0A0A0A;
+  --bg-secondary: #101010;
+  --bg-card:      #1A1A1A;
+  --bg-white:     #0A0A0A;
+  --text:         #F5F2EE;
+  --text-muted:   #999999;
+  --text-inv:     #0A0A0A;
+  --border:       rgba(245, 242, 238, 0.08);
+  --border-strong:rgba(245, 242, 238, 0.15);
+  --surface:      rgba(26, 26, 26, 0.7);
+  --nav-bg:       rgba(10, 10, 10, 0.85);
+}
+
+/* ─── Base Reset ───────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+#root {
+  min-height: 100svh;
+  width: 100%;
+}
+
+/* ─── Typography Utilities ─────────────────────────────────── */
+.font-display {
+  font-family: 'Network', cursive;
+}
+
+.font-heading {
+  font-family: 'ABCWhyte', sans-serif;
+}
+
+/* ─── Gradient Background ──────────────────────────────────── */
+.bg-brand-gradient {
+  background: linear-gradient(135deg, #9E0015 0%, #EF3537 50%, #FF6B6B 100%);
+}
+
+.bg-hero-gradient {
+  background: linear-gradient(
+    140deg,
+    #9E0015 0%,
+    #C41230 30%,
+    #EF3537 65%,
+    #FF4D6B 85%,
+    #FF7A8A 100%
+  );
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #EF3537, #FF6B6B);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Custom Scrollbar ─────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--red); border-radius: 2px; }
+
+/* ─── Hero title — ABCWhyte Inktrap responsive ─────────────── */
+.hero-title {
+  font-family: 'ABCWhyteInktrap', sans-serif;
+  font-weight: 573;
+  font-style: normal;
+  color: #F5F2EE;
+  font-size: 32px;
+  line-height: 41px;
+  letter-spacing: -1.6px;
+}
+@media (min-width: 768px) {
+  .hero-title {
+    font-size: 74.346px;
+    line-height: 76.204px;
+    letter-spacing: -3.717px;
+  }
+}
+
+/* ─── Hero subtitle — ABCWhyte Inktrap responsive ──────────── */
+.hero-subtitle {
+  font-family: 'ABCWhyteInktrap', sans-serif;
+  font-weight: 185;
+  font-style: normal;
+  color: #F5F2EE;
+  font-size: 24px;
+  line-height: 30px;
+  letter-spacing: 4.32px;
+}
+@media (min-width: 768px) {
+  .hero-subtitle {
+    font-size: 59.476px;
+    line-height: 55.759px;
+    letter-spacing: 10.706px;
+  }
+}
+
+/* ─── Selection ────────────────────────────────────────────── */
+::selection {
+  background: #EF3537;
+  color: #FFFFFF;
+}
+
+/* ─── Noise overlay texture ────────────────────────────────── */
+.noise-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ─── Scroll-driven animations ─────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-60px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(60px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 53, 55, 0.4); }
+  50%       { box-shadow: 0 0 0 12px rgba(239, 53, 55, 0); }
+}
+
+.animate-marquee { animation: marquee 24s linear infinite; }
+.animate-float   { animation: float 4s ease-in-out infinite; }
+.animate-pulse-red { animation: pulse-red 2s ease-in-out infinite; }
+
+/* ─── Nav link underline effect ────────────────────────────── */
+.nav-link {
+  position: relative;
+  transition: color 0.2s ease;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--red);
+  transition: width 0.3s ease;
+}
+.nav-link:hover::after,
+.nav-link.active::after { width: 100%; }
+.nav-link.active { color: var(--red); }
+
+/* ─── Card hover lift ──────────────────────────────────────── */
+.card-lift {
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.35s ease;
+}
+.card-lift:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.15);
+}
+
+[data-theme="dark"] .card-lift:hover {
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+}
+
+/* ─── Red pill tag ─────────────────────────────────────────── */
+.tag-red {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(239,53,55,0.12);
+  color: var(--red);
+  border: 1px solid rgba(239,53,55,0.25);
+}
+
+/* ─── Timeline dot ─────────────────────────────────────────── */
+.timeline-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--red);
+  flex-shrink: 0;
+  margin-top: 6px;
+  box-shadow: 0 0 0 3px rgba(239,53,55,0.2);
+}
+
+/* ─── Section divider line ─────────────────────────────────── */
+.divider {
+  width: 48px;
+  height: 2px;
+  background: var(--red);
+  border-radius: 1px;
+}
+
+/* ─── Stats counter ────────────────────────────────────────── */
+.stat-value {
+  font-family: 'ABCWhyte', sans-serif;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--red);
+}
+
+/* ─── Glassmorphism card ────────────────────────────────────── */
+.glass-card {
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+}
+
+/* ─── Image mask for hero ──────────────────────────────────── */
+.hero-mask {
+  mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%),
+              linear-gradient(to bottom, black 60%, transparent 100%);
+  mask-composite: intersect;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%),
+                      linear-gradient(to bottom, black 60%, transparent 100%);
+  -webkit-mask-composite: destination-in;
+}
+
+/* ─── View Transition — circular theme reveal ──────────────── */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+/* ─── Hero desktop image focal point ──────────────────────── */
+.hero-img-desktop { object-position: center 20%; }
+@media (min-width: 768px) and (max-width: 1079px) {
+  .hero-img-desktop { object-position: center 10%; }
+}
+
+/* ─── Hide scrollbar utility ───────────────────────────────── */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ─── Acessibilidade: respeita preferência de redução de movimento ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration:   0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration:  0.01ms !important;
+    scroll-behavior:      auto !important;
+  }
+}
+
+/* ─── Consistent section padding (mobile 24px · desktop 40px) ─ */
+.section-px {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+@media (min-width: 1024px) {
+  .section-px {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+}

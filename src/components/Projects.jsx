@@ -1,0 +1,416 @@
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { useInView } from '../hooks/useInView'
+import { useTextStyle } from '../hooks/useTextStyle'
+import { useTheme } from '../context/ThemeContext'
+import { useLang } from '../context/LangContext'
+
+const PROJECTS_BASE = [
+  { id: 1, titleKey: 'projects.0.title', client: 'Mercado Pago', tags: ['UX/UI', 'Finance', 'Leadership'], img: null, href: '#' },
+  { id: 2, titleKey: 'projects.1.title', client: 'Boa Praça',    tags: ['UX/UI', 'Ecommerce', 'Leadership'], img: null, href: '#' },
+  { id: 3, titleKey: 'projects.2.title', client: 'Mercado Livre',tags: ['UX/UI', 'Ecommerce'], img: null, href: '#' },
+  { id: 4, titleKey: 'projects.3.title', client: 'Wine',         tags: ['UX/UI', 'Design System', 'Leadership'], img: null, href: '#' },
+  { id: 5, titleKey: 'projects.4.title', client: 'Itaú',         tags: ['UX/UI', 'Finance', 'Mobile'], img: null, href: '#' },
+]
+
+/* ── Checkerboard CSS background (Figma-style image placeholder) ── */
+const CHECKER = {
+  backgroundImage: 'repeating-conic-gradient(#D4D4D4 0% 25%, #E9E9E9 0% 50%)',
+  backgroundSize: '28px 28px',
+}
+
+const GAP = 16
+
+/* ── Responsive padding: mobile 24px · desktop (≥1024px) 162px ── */
+function useSectionPad() {
+  const [pad, setPad] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth >= 1024 ? 162 : 24
+  )
+  useEffect(() => {
+    const update = () => setPad(window.innerWidth >= 1024 ? 162 : 24)
+    window.addEventListener('resize', update, { passive: true })
+    return () => window.removeEventListener('resize', update)
+  }, [])
+  return pad
+}
+
+export default function Projects() {
+  const [ref, inView]           = useInView()
+  const scrollRef               = useRef(null)
+  const [active, setActive]     = useState(0)
+  const [hovered, setHovered]   = useState(null)
+  const heading                 = useTextStyle('projects-heading')
+  const { isDark }              = useTheme()
+  const { t }                   = useLang()
+  const projects                = PROJECTS_BASE.map(p => ({ ...p, title: t(p.titleKey) }))
+  const padX                    = useSectionPad()
+  const [winW, setWinW]         = useState(() => typeof window !== 'undefined' ? window.innerWidth  : 390)
+  const [winH, setWinH]         = useState(() => typeof window !== 'undefined' ? window.innerHeight : 844)
+  useEffect(() => {
+    const onResize = () => { setWinW(window.innerWidth); setWinH(window.innerHeight) }
+    window.addEventListener('resize', onResize, { passive: true })
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+  const isDesktop               = padX === 162
+  const cardW                   = isDesktop ? 786 : winW - padX - 60
+  const carouselH               = isDesktop ? 430 : Math.max(482, Math.round(winH * 0.687))
+
+  const dragState = useRef({ active: false, startX: 0, scrollLeft: 0, moved: false })
+  const velRef    = useRef(0)
+  const prevXRef  = useRef(0)
+  const prevTRef  = useRef(0)
+  const rafRef    = useRef(null)
+
+  const snapToNearest = useCallback(() => {
+    const c = scrollRef.current
+    if (!c) return
+    c.style.scrollSnapType = 'x mandatory'
+    const pl = parseFloat(getComputedStyle(c).paddingLeft) || 0
+    const cards = Array.from(c.querySelectorAll('[data-card]'))
+    let closest = 0, minDist = Infinity
+    cards.forEach((card, i) => {
+      const d = Math.abs(card.offsetLeft - pl - c.scrollLeft)
+      if (d < minDist) { minDist = d; closest = i }
+    })
+    const target = cards[closest]
+    if (target) c.scrollTo({ left: target.offsetLeft - pl, behavior: 'smooth' })
+    setActive(closest)
+  }, [])
+
+  const onMouseDown = useCallback((e) => {
+    const c = scrollRef.current
+    if (!c) return
+    cancelAnimationFrame(rafRef.current)
+    c.style.scrollSnapType = 'none'
+    dragState.current = { active: true, startX: e.pageX, scrollLeft: c.scrollLeft, moved: false }
+    velRef.current  = 0
+    prevXRef.current = e.pageX
+    prevTRef.current = performance.now()
+    c.style.cursor = 'grabbing'
+    c.style.userSelect = 'none'
+  }, [])
+
+  const onMouseMove = useCallback((e) => {
+    const ds = dragState.current
+    if (!ds.active) return
+    const now = performance.now()
+    const dt  = now - prevTRef.current
+    if (dt > 0) velRef.current = (prevXRef.current - e.pageX) / dt * 16
+    prevXRef.current = e.pageX
+    prevTRef.current = now
+    const dx = e.pageX - ds.startX
+    if (Math.abs(dx) > 4) ds.moved = true
+    scrollRef.current.scrollLeft = ds.scrollLeft - dx
+  }, [])
+
+  const onMouseUp = useCallback(() => {
+    const c = scrollRef.current
+    if (!c || !dragState.current.active) return
+    dragState.current.active = false
+    c.style.cursor = 'grab'
+    c.style.userSelect = ''
+    let vel = velRef.current
+    const friction = 0.93
+    const tick = () => {
+      vel *= friction
+      c.scrollLeft += vel
+      if (Math.abs(vel) > 0.8) {
+        rafRef.current = requestAnimationFrame(tick)
+      } else {
+        snapToNearest()
+      }
+    }
+    if (Math.abs(vel) > 1) {
+      rafRef.current = requestAnimationFrame(tick)
+    } else {
+      snapToNearest()
+    }
+  }, [snapToNearest])
+
+  useEffect(() => {
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+      cancelAnimationFrame(rafRef.current)
+    }
+  }, [onMouseMove, onMouseUp])
+
+  const scrollToCard = useCallback((idx) => {
+    const c = scrollRef.current
+    if (!c) return
+    const cards = Array.from(c.querySelectorAll('[data-card]'))
+    if (!cards[idx]) return
+    const pl = parseFloat(getComputedStyle(c).paddingLeft) || 0
+    c.scrollTo({ left: cards[idx].offsetLeft - pl, behavior: 'smooth' })
+    setActive(idx)
+  }, [])
+
+  useEffect(() => {
+    const c = scrollRef.current
+    if (!c) return
+    const onScroll = () => {
+      const pl = parseFloat(getComputedStyle(c).paddingLeft) || 0
+      const cards = Array.from(c.querySelectorAll('[data-card]'))
+      let closest = 0, minDist = Infinity
+      cards.forEach((card, i) => {
+        const d = Math.abs(card.offsetLeft - pl - c.scrollLeft)
+        if (d < minDist) { minDist = d; closest = i }
+      })
+      setActive(closest)
+    }
+    c.addEventListener('scroll', onScroll, { passive: true })
+    return () => c.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const nav = (
+    <div className="flex items-center gap-5">
+      {/* Prev */}
+      <button
+        onClick={() => scrollToCard(Math.max(0, active - 1))}
+        disabled={active === 0}
+        aria-label={t('projects.aria.prev')}
+        className="hidden md:flex w-8 h-8 items-center justify-center disabled:opacity-20 transition-opacity"
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text)" strokeWidth="1.8">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </button>
+
+      {/* Dots */}
+      <div className="flex items-center gap-[8px]">
+        {projects.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => scrollToCard(i)}
+            aria-label={`${t('projects.aria.dot')} ${i + 1}`}
+            aria-current={i === active ? 'true' : undefined}
+            className="rounded-full transition-all duration-300"
+            style={{
+              width:      i === active ? '10px' : '7px',
+              height:     i === active ? '10px' : '7px',
+              background: 'var(--text)',
+              opacity:    i === active ? 1 : 0.25,
+              border:     'none',
+              cursor:     'pointer',
+              padding:    0,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Next */}
+      <button
+        onClick={() => scrollToCard(Math.min(projects.length - 1, active + 1))}
+        disabled={active === projects.length - 1}
+        aria-label={t('projects.aria.next')}
+        className="hidden md:flex w-8 h-8 items-center justify-center disabled:opacity-20 transition-opacity"
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text)" strokeWidth="1.8">
+          <path d="M9 18l6-6-6-6"/>
+        </svg>
+      </button>
+    </div>
+  )
+
+  return (
+    <section id="projetos" ref={ref} className="bg-[var(--bg-secondary)] overflow-hidden" style={{ minHeight: '100vh', position: 'relative' }}>
+
+      {/* Vertical padding: mobile 80/16 · desktop 125/185 */}
+      <div style={{ paddingTop: padX === 162 ? '125px' : '112px', paddingBottom: padX === 162 ? '185px' : '80px', position: 'relative', zIndex: 1 }}>
+
+        {/* ── Header row ── */}
+        <div
+          style={{ paddingLeft: `${padX}px`, paddingRight: `${padX}px` }}
+          className="flex items-end justify-between"
+        >
+          <h2
+            style={{ ...heading.style, ...(isDark ? { color: '#fff' } : {}), lineHeight: 'normal' }}
+            className="leading-none"
+          >
+            {heading.content}
+          </h2>
+        </div>
+
+        {/* ── Carousel: left padding matches header, right adds trailing space ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 36 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.65, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+          style={{ marginTop: isDesktop ? '-40px' : '-16px', position: 'relative', zIndex: 1 }}
+        >
+          <div
+            ref={scrollRef}
+            className="no-scrollbar"
+            style={{
+              display:          'flex',
+              overflowX:        'auto',
+              scrollSnapType:   'x mandatory',
+              gap:                      `${isDesktop ? GAP : 8}px`,
+              paddingLeft:              `${padX}px`,
+              paddingRight:             `${padX}px`,
+              scrollPaddingLeft:        `${padX}px`,
+              height:                   `${carouselH}px`,
+              cursor:                   'grab',
+              WebkitOverflowScrolling:  'touch',
+            }}
+            onMouseDown={onMouseDown}
+          >
+          {projects.map((p, i) => (
+            <article
+              key={p.id}
+              data-card
+              className="relative cursor-pointer group"
+              style={{
+                scrollSnapAlign: 'start',
+                width:           `${cardW}px`,
+                flexShrink:      0,
+                alignSelf:       'stretch',
+              }}
+              onMouseEnter={() => isDesktop && setHovered(p.id)}
+              onMouseLeave={() => isDesktop && setHovered(null)}
+            >
+              {/* Inner div scales — outer article keeps layout size so gaps stay fixed */}
+              <motion.div
+                animate={{
+                  scale: isDesktop
+                    ? (hovered === null ? 1 : hovered === p.id ? 1 : 0.94)
+                    : (active === i ? 1 : 0.92),
+                }}
+                transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+                style={{
+                  width:           '100%',
+                  height:          '100%',
+                  borderRadius:    '40px',
+                  overflow:        'hidden',
+                  display:         'flex',
+                  flexDirection:   'column',
+                  justifyContent:  'flex-end',
+                  alignItems:      'flex-start',
+                  willChange:      'transform',
+                  ...(p.img
+                    ? {
+                        backgroundImage:    `url(${p.img})`,
+                        backgroundColor:    'lightgray',
+                        backgroundPosition: '-126.21px 0.347px',
+                        backgroundSize:     '132.011% 102.756%',
+                        backgroundRepeat:   'no-repeat',
+                      }
+                    : CHECKER),
+                }}
+              >
+              {/* Info strip — pinned to bottom by card's flex column + justify-end */}
+              <div
+                style={{
+                  display:              'flex',
+                  alignItems:           'flex-start',
+                  alignSelf:            'stretch',
+                  borderRadius:         '0 0 40px 40px',
+                  background:           'rgba(10, 10, 10, 0.30)',
+                  backdropFilter:       'blur(10.5px)',
+                  WebkitBackdropFilter: 'blur(10.5px)',
+                  position:             'relative',
+                  zIndex:               10,
+                  ...(isDesktop
+                    ? { padding: '32px 32px 40px 32px', gap: '24px' }
+                    : { padding: '24px', justifyContent: 'space-between' }),
+                }}
+              >
+                {/* Left: title + tags stacked */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, minWidth: 0 }}>
+                  <h3
+                    style={{
+                      alignSelf:         'stretch',
+                      color:             '#FFF',
+                      fontFamily:        'ABCWhyteInktrap, sans-serif',
+                      fontSize:          isDesktop ? '24px' : '20px',
+                      fontStyle:         'normal',
+                      fontWeight:        700,
+                      lineHeight:        'normal',
+                      textTransform:     'uppercase',
+                      display:           '-webkit-box',
+                      WebkitLineClamp:   2,
+                      WebkitBoxOrient:   'vertical',
+                      overflow:          'hidden',
+                      textOverflow:      'ellipsis',
+                    }}
+                  >
+                    {p.title}
+                    <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 400, margin: '0 8px' }}>·</span>
+                    {p.client}
+                  </h3>
+                  <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '6px', overflow: 'hidden' }}>
+                    {p.tags.slice(0, 2).map(t => (
+                      <span
+                        key={t}
+                        style={{
+                          display:        'flex',
+                          padding:        '12px',
+                          justifyContent: 'center',
+                          alignItems:     'center',
+                          gap:            '10.129px',
+                          borderRadius:   '100px',
+                          border:         '1.013px solid #FFF',
+                          color:          '#FFF',
+                          textAlign:      'center',
+                          fontFamily:     'ABCWhyte, sans-serif',
+                          fontSize:       '12px',
+                          fontStyle:      'normal',
+                          fontWeight:     500,
+                          lineHeight:     'normal',
+                          letterSpacing:  '0.6px',
+                          textTransform:  'uppercase',
+                          flexShrink:     0,
+                          whiteSpace:     'nowrap',
+                        }}
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right: arrow icon */}
+                <a
+                  href={p.href}
+                  onClick={e => { if (dragState.current.moved) e.preventDefault(); e.stopPropagation() }}
+                  className="shrink-0 text-white/50 group-hover:text-white"
+                  style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.2s, transform 0.2s', transform: 'translate(0,0)', flexShrink: 0 }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'translate(2px,-2px)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'translate(0,0)'}
+                  aria-label={t('projects.aria.view')}
+                >
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <path d="M7 17L17 7M17 7H7M17 7v10"/>
+                  </svg>
+                </a>
+              </div>
+              </motion.div>
+            </article>
+          ))}
+        </div>
+
+          {/* Mobile nav — centered, 24px below cards */}
+          <div className="md:hidden flex justify-center" style={{ marginTop: '24px' }}>
+            {nav}
+          </div>
+
+          {/* Desktop nav — left-aligned, 32px below cards */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : {}}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="hidden md:flex"
+            style={{ paddingLeft: `${padX}px`, marginTop: '32px' }}
+          >
+            {nav}
+          </motion.div>
+        </motion.div>
+
+      </div>{/* end vertical padding wrapper */}
+    </section>
+  )
+}

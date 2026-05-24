@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useId } from 'react'
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import { useLang } from '../context/LangContext'
 
@@ -10,7 +11,7 @@ const LANGUAGES = [
 ]
 
 /* ── Config ── */
-const ALL_SECTIONS      = ['hero', 'projetos', 'sobre', 'skills', 'recomendacoes', 'jornada', 'contato']
+const ALL_SECTIONS      = ['hero', 'projetos', 'sobre', 'skills', 'recomendacoes', 'jornada', 'mp-quote', 'contato']
 const DARK_SECTIONS     = new Set(['hero', 'recomendacoes', 'contato'])
 const FORCE_TRANSPARENT = new Set(['hero', 'recomendacoes', 'contato'])
 
@@ -53,21 +54,67 @@ function iconBtnHover(restoreBg, restoreColor) {
   }
 }
 
-/* ── Icons ── */
-function MoonIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-    </svg>
-  )
-}
+/* ── Animated sun ↔ moon icon (spring physics + SVG mask) ── */
+function AnimatedThemeIcon({ isDark }) {
+  const id      = useId()
+  const maskId  = `att${id.replace(/:/g, '')}`
+  const isFirst = useRef(true)
+  const moon    = !isDark  // moon in light mode, sun in dark mode
 
-function SunIcon() {
+  useEffect(() => {
+    requestAnimationFrame(() => { isFirst.current = false })
+  }, [])
+
+  const spring = isFirst.current
+    ? { duration: 0 }
+    : { type: 'spring', stiffness: 380, damping: 30 }
+
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <circle cx="12" cy="12" r="5" />
-      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-    </svg>
+    <motion.svg
+      width="20" height="20" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+      initial={false}
+      animate={{ rotate: moon ? 270 : 0 }}
+      transition={spring}
+      style={{ overflow: 'visible' }}
+      aria-hidden="true"
+    >
+      <mask id={maskId}>
+        <rect x="0" y="0" width="100%" height="100%" fill="white" />
+        <motion.circle
+          initial={false}
+          animate={{ cx: moon ? 17 : 33, cy: moon ? 8 : 0 }}
+          transition={spring}
+          r="9"
+          fill="black"
+        />
+      </mask>
+
+      <motion.circle
+        cx="12" cy="12"
+        fill="currentColor" stroke="none"
+        mask={`url(#${maskId})`}
+        initial={false}
+        animate={{ r: moon ? 9 : 5 }}
+        transition={spring}
+      />
+
+      <motion.g
+        initial={false}
+        animate={{ opacity: moon ? 0 : 1, scale: moon ? 0 : 1, rotate: moon ? -30 : 0 }}
+        transition={spring}
+        style={{ transformOrigin: '12px 12px' }}
+      >
+        <line x1="12" y1="1"    x2="12" y2="3"    />
+        <line x1="12" y1="21"   x2="12" y2="23"   />
+        <line x1="1"  y1="12"   x2="3"  y2="12"   />
+        <line x1="21" y1="12"   x2="23" y2="12"   />
+        <line x1="5.64"  y1="5.64"  x2="4.22"  y2="4.22"  />
+        <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"  />
+        <line x1="5.64"  y1="18.36" x2="4.22"  y2="19.78" />
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+      </motion.g>
+    </motion.svg>
   )
 }
 
@@ -247,9 +294,13 @@ const btnReset = {
 export default function Navbar() {
   const { isDark, toggle }               = useTheme()
   const { lang, setLang, t }             = useLang()
+  const location                         = useLocation()
+  const navigate                         = useNavigate()
+  const isHome                           = location.pathname === '/'
   const [scrolled, setScrolled]          = useState(false)
   const [menuOpen, setMenuOpen]          = useState(false)
   const [activeSection, setActiveSection] = useState('hero')
+  const [overDarkBand, setOverDarkBand]  = useState(false)
   const [waveOrigin, setWaveOrigin]      = useState('calc(100% - 64px) 56px')
   const [langSheetOpen, setLangSheetOpen] = useState(false)
   const menuBtnRef                       = useRef(null)
@@ -259,10 +310,30 @@ export default function Navbar() {
   }, [menuOpen])
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 40)
+    /* Home: blur após 40px (forceTransparent mantém transparente sobre seções escuras).
+       Projeto: blur só após o hero completo (100svh) sair da viewport. */
+    const threshold = () => isHome ? 40 : window.innerHeight * 0.9
+    const fn = () => setScrolled(window.scrollY > threshold())
     window.addEventListener('scroll', fn, { passive: true })
-    return () => window.removeEventListener('scroll', fn)
-  }, [])
+    window.addEventListener('resize', fn, { passive: true })
+    fn() // sincroniza imediatamente ao montar ou trocar de página
+    return () => {
+      window.removeEventListener('scroll', fn)
+      window.removeEventListener('resize', fn)
+    }
+  }, [isHome])
+
+  useEffect(() => {
+    const checkDarkBand = () => {
+      const el = document.getElementById('mp-quote')
+      if (!el) { setOverDarkBand(false); return }
+      const { top, bottom } = el.getBoundingClientRect()
+      setOverDarkBand(top <= 80 && bottom > 0)
+    }
+    window.addEventListener('scroll', checkDarkBand, { passive: true })
+    checkDarkBand()
+    return () => window.removeEventListener('scroll', checkDarkBand)
+  }, [location.pathname])
 
   useEffect(() => {
     const update = () => {
@@ -286,31 +357,38 @@ export default function Navbar() {
 
   const handleNav = useCallback(href => {
     setMenuOpen(false)
-    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
-  }, [])
+    if (isHome) {
+      document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
+    } else {
+      navigate('/', { state: { anchor: href } })
+    }
+  }, [isHome, navigate])
 
-  /* ── Variant ── */
-  const forceTransparent = FORCE_TRANSPARENT.has(activeSection)
-  const onDarkSection    = DARK_SECTIONS.has(activeSection) && !scrolled
-  const whiteText        = forceTransparent || onDarkSection || isDark
+  /* ── Variant ──
+     Home:    força transparência sobre hero/recs/contato; texto branco sobre seções escuras
+     Projeto: transparente sobre hero (texto sempre escuro); blur + tema ao scrollar       */
+  const GLOBAL_DARK      = activeSection === 'contato' || overDarkBand
+  const forceTransparent = GLOBAL_DARK || (isHome && FORCE_TRANSPARENT.has(activeSection))
+  const onDarkSection    = isHome && DARK_SECTIONS.has(activeSection) && !scrolled
+  const isBlurred        = !forceTransparent && scrolled
+  const whiteText        = isHome
+    ? (forceTransparent || onDarkSection || isDark)
+    : (forceTransparent || (isBlurred && isDark))
+  const headerBg    = isBlurred
+    ? (isDark ? 'rgba(16,16,16,0.6)' : 'rgba(255,255,255,0.9)')
+    : 'transparent'
 
   const textColor   = whiteText ? '#ffffff' : '#0a0a0a'
-  /* Active text: red only on White scrolled header (not on force-transparent sections) */
-  const activeColor = (!forceTransparent && scrolled && !isDark) ? '#ef3537' : textColor
+  const activeColor = (isBlurred && !isDark) ? '#ef3537' : textColor
   const pillActive  = whiteText ? 'rgba(245,245,245,0.25)' : 'rgba(10,10,10,0.05)'
   const pillUtil    = whiteText ? 'rgba(245,245,245,0.25)' : 'rgba(10,10,10,0.05)'
   const dividerClr  = whiteText ? 'rgba(255,255,255,0.25)' : 'rgba(10,10,10,0.2)'
 
   const logoFilter = (() => {
-    if (!forceTransparent && scrolled && !isDark)
+    if (isBlurred && !isDark)
       return 'brightness(0) saturate(100%) invert(27%) sepia(87%) saturate(3548%) hue-rotate(347deg) brightness(96%)'
     return whiteText ? 'brightness(0) invert(1)' : 'brightness(0)'
   })()
-
-  const isBlurred = !forceTransparent && scrolled
-  const headerBg  = isBlurred
-    ? (isDark ? 'rgba(16,16,16,0.6)' : 'rgba(255,255,255,0.9)')
-    : 'transparent'
 
   return (
     <>
@@ -353,7 +431,7 @@ export default function Navbar() {
             {/* Nav links — NavigationButton Small */}
             <LayoutGroup id="desktop-nav">
               {NAV_KEYS.map(link => {
-                const active  = '#' + activeSection === link.href
+                const active  = isHome && '#' + activeSection === link.href
                 const restClr = active ? activeColor : textColor
                 return (
                   <button
@@ -415,7 +493,7 @@ export default function Navbar() {
                 color:        textColor,
               }}
             >
-              {isDark ? <SunIcon /> : <MoonIcon />}
+              <AnimatedThemeIcon isDark={isDark} />
             </button>
 
             {/* Language select */}
@@ -469,7 +547,7 @@ export default function Navbar() {
                   color:        textColor,
                 }}
               >
-                {isDark ? <SunIcon /> : <MoonIcon />}
+                <AnimatedThemeIcon isDark={isDark} />
               </button>
               <button
                 ref={menuBtnRef}
@@ -601,7 +679,7 @@ export default function Navbar() {
               }}
             >
               {NAV_KEYS.map((link, i) => {
-                const isActive = '#' + activeSection === link.href
+                const isActive = isHome && '#' + activeSection === link.href
                 const color    = isActive ? '#EF3537' : isDark ? 'rgba(255,255,255,0.4)' : '#666666'
                 return (
                   <motion.button

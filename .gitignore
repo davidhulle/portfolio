@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Design reference assets (not production)
+assets-ref/
+SESSAO_CHANGES.txt
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

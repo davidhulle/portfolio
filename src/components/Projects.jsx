@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useInView } from '../hooks/useInView'
 import { useTextStyle } from '../hooks/useTextStyle'
@@ -6,11 +7,11 @@ import { useTheme } from '../context/ThemeContext'
 import { useLang } from '../context/LangContext'
 
 const PROJECTS_BASE = [
-  { id: 1, titleKey: 'projects.0.title', client: 'Mercado Pago', tags: ['UX/UI', 'Finance', 'Leadership'], img: null, href: '#' },
-  { id: 2, titleKey: 'projects.1.title', client: 'Boa Praça',    tags: ['UX/UI', 'Ecommerce', 'Leadership'], img: null, href: '#' },
-  { id: 3, titleKey: 'projects.2.title', client: 'Mercado Livre',tags: ['UX/UI', 'Ecommerce'], img: null, href: '#' },
-  { id: 4, titleKey: 'projects.3.title', client: 'Wine',         tags: ['UX/UI', 'Design System', 'Leadership'], img: null, href: '#' },
-  { id: 5, titleKey: 'projects.4.title', client: 'Itaú',         tags: ['UX/UI', 'Finance', 'Mobile'], img: null, href: '#' },
+  { id: 1, titleKey: 'projects.0.title', client: 'Mercado Pago', tags: ['Leadership', 'Finance'],           img: '/images/projects/mercadopago-desktop.png', imgMobile: '/images/projects/mercadopago-mobile.png', href: '/projeto/mercado-pago' },
+  { id: 2, titleKey: 'projects.1.title', client: 'Boa Praça',    tags: ['UX/UI', 'Ecommerce', 'Leadership'], img: '/images/projects/boapraca-desktop.png',     imgMobile: '/images/projects/boapraca-mobile.png',   href: '#' },
+  { id: 3, titleKey: 'projects.2.title', client: 'Itaú',         tags: ['UX/UI', 'Finance'],                img: '/images/projects/agro-desktop.png',          imgMobile: '/images/projects/agro-mobile.png',       href: '#' },
+  { id: 4, titleKey: 'projects.3.title', client: 'Wine',         tags: ['UX/UI', 'Ecommerce'],              img: '/images/projects/wine-desktop.png',          imgMobile: '/images/projects/wine-mobile.png',       href: '#' },
+  { id: 5, titleKey: 'projects.4.title', client: 'Degrau',       tags: ['UX/UI', 'Ecommerce'],              img: '/images/projects/degrau-desktop.png',         imgMobile: '/images/projects/degrau-mobile.png',     href: '#' },
 ]
 
 /* ── Checkerboard CSS background (Figma-style image placeholder) ── */
@@ -36,6 +37,7 @@ function useSectionPad() {
 
 export default function Projects() {
   const [ref, inView]           = useInView()
+  const navigate                = useNavigate()
   const scrollRef               = useRef(null)
   const [active, setActive]     = useState(0)
   const [hovered, setHovered]   = useState(null)
@@ -67,6 +69,10 @@ export default function Projects() {
     c.style.scrollSnapType = 'x mandatory'
     const pl = parseFloat(getComputedStyle(c).paddingLeft) || 0
     const cards = Array.from(c.querySelectorAll('[data-card]'))
+    if (c.scrollLeft >= c.scrollWidth - c.clientWidth - 1) {
+      setActive(cards.length - 1)
+      return
+    }
     let closest = 0, minDist = Infinity
     cards.forEach((card, i) => {
       const d = Math.abs(card.offsetLeft - pl - c.scrollLeft)
@@ -153,6 +159,10 @@ export default function Projects() {
     const onScroll = () => {
       const pl = parseFloat(getComputedStyle(c).paddingLeft) || 0
       const cards = Array.from(c.querySelectorAll('[data-card]'))
+      if (c.scrollLeft >= c.scrollWidth - c.clientWidth - 1) {
+        setActive(cards.length - 1)
+        return
+      }
       let closest = 0, minDist = Infinity
       cards.forEach((card, i) => {
         const d = Math.abs(card.offsetLeft - pl - c.scrollLeft)
@@ -164,12 +174,20 @@ export default function Projects() {
     return () => c.removeEventListener('scroll', onScroll)
   }, [])
 
+  const step     = isDesktop ? 2 : 1
+  const dotCount = isDesktop ? Math.ceil(projects.length / 2) : projects.length
+  const activeDot = isDesktop ? Math.floor(active / 2) : active
+
+  const scrollToDot = useCallback((dotIdx) => {
+    scrollToCard(isDesktop ? dotIdx * 2 : dotIdx)
+  }, [isDesktop, scrollToCard])
+
   const nav = (
     <div className="flex items-center gap-5">
       {/* Prev */}
       <button
-        onClick={() => scrollToCard(Math.max(0, active - 1))}
-        disabled={active === 0}
+        onClick={() => scrollToCard(Math.max(0, active - step))}
+        disabled={activeDot === 0}
         aria-label={t('projects.aria.prev')}
         className="hidden md:flex w-8 h-8 items-center justify-center disabled:opacity-20 transition-opacity"
         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
@@ -181,18 +199,18 @@ export default function Projects() {
 
       {/* Dots */}
       <div className="flex items-center gap-[8px]">
-        {projects.map((_, i) => (
+        {Array.from({ length: dotCount }, (_, i) => (
           <button
             key={i}
-            onClick={() => scrollToCard(i)}
+            onClick={() => scrollToDot(i)}
             aria-label={`${t('projects.aria.dot')} ${i + 1}`}
-            aria-current={i === active ? 'true' : undefined}
+            aria-current={i === activeDot ? 'true' : undefined}
             className="rounded-full transition-all duration-300"
             style={{
-              width:      i === active ? '10px' : '7px',
-              height:     i === active ? '10px' : '7px',
+              width:      i === activeDot ? '10px' : '7px',
+              height:     i === activeDot ? '10px' : '7px',
               background: 'var(--text)',
-              opacity:    i === active ? 1 : 0.25,
+              opacity:    i === activeDot ? 1 : 0.25,
               border:     'none',
               cursor:     'pointer',
               padding:    0,
@@ -203,8 +221,8 @@ export default function Projects() {
 
       {/* Next */}
       <button
-        onClick={() => scrollToCard(Math.min(projects.length - 1, active + 1))}
-        disabled={active === projects.length - 1}
+        onClick={() => scrollToCard(Math.min(projects.length - 1, active + step))}
+        disabled={activeDot === dotCount - 1}
         aria-label={t('projects.aria.next')}
         className="hidden md:flex w-8 h-8 items-center justify-center disabled:opacity-20 transition-opacity"
         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
@@ -263,13 +281,15 @@ export default function Projects() {
             <article
               key={p.id}
               data-card
-              className="relative cursor-pointer group"
+              className="relative group"
               style={{
                 scrollSnapAlign: 'start',
                 width:           `${cardW}px`,
                 flexShrink:      0,
                 alignSelf:       'stretch',
+                cursor:          p.href !== '#' ? 'pointer' : 'grab',
               }}
+              onClick={() => { if (!dragState.current.moved && p.href !== '#') navigate(p.href) }}
               onMouseEnter={() => isDesktop && setHovered(p.id)}
               onMouseLeave={() => isDesktop && setHovered(null)}
             >
@@ -291,17 +311,39 @@ export default function Projects() {
                   justifyContent:  'flex-end',
                   alignItems:      'flex-start',
                   willChange:      'transform',
-                  ...(p.img
-                    ? {
-                        backgroundImage:    `url(${p.img})`,
-                        backgroundColor:    'lightgray',
-                        backgroundPosition: '-126.21px 0.347px',
-                        backgroundSize:     '132.011% 102.756%',
-                        backgroundRepeat:   'no-repeat',
-                      }
-                    : CHECKER),
+                  ...(() => {
+                    const src = isDesktop ? p.img : (p.imgMobile ?? p.img)
+                    return src
+                      ? { backgroundImage: `url(${src})`, backgroundPosition: 'center', backgroundSize: 'cover', backgroundRepeat: 'no-repeat' }
+                      : CHECKER
+                  })(),
                 }}
               >
+              {/* Coming soon badge */}
+              {p.href === '#' && (
+                <div style={{
+                  position:             'absolute',
+                  top:                  20,
+                  left:                 20,
+                  zIndex:               5,
+                  padding:              '6px 14px',
+                  borderRadius:         100,
+                  background:           'rgba(10,10,10,0.45)',
+                  backdropFilter:       'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  border:               '1px solid rgba(255,255,255,0.18)',
+                  color:                '#ffffff',
+                  fontFamily:           "'ABCWhyte', sans-serif",
+                  fontSize:             '11px',
+                  fontWeight:           500,
+                  letterSpacing:        '0.8px',
+                  textTransform:        'uppercase',
+                  whiteSpace:           'nowrap',
+                }}>
+                  {t('projects.comingSoon')}
+                </div>
+              )}
+
               {/* Info strip — pinned to bottom by card's flex column + justify-end */}
               <div
                 style={{
@@ -374,19 +416,16 @@ export default function Projects() {
                 </div>
 
                 {/* Right: arrow icon */}
-                <a
-                  href={p.href}
-                  onClick={e => { if (dragState.current.moved) e.preventDefault(); e.stopPropagation() }}
-                  className="shrink-0 text-white/50 group-hover:text-white"
-                  style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.2s, transform 0.2s', transform: 'translate(0,0)', flexShrink: 0 }}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'translate(2px,-2px)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'translate(0,0)'}
-                  aria-label={t('projects.aria.view')}
+                <div
+                  role="presentation"
+                  style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.2s, transform 0.2s', transform: 'translate(0,0)', flexShrink: 0, color: 'rgba(255,255,255,0.5)' }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translate(2px,-2px)'; e.currentTarget.style.color = '#ffffff' }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translate(0,0)'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)' }}
                 >
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <path d="M7 17L17 7M17 7H7M17 7v10"/>
                   </svg>
-                </a>
+                </div>
               </div>
               </motion.div>
             </article>

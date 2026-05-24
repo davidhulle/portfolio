@@ -1,38 +1,43 @@
-import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Component } from 'react'
 import { ThemeProvider } from './context/ThemeContext'
 import { LangProvider }  from './context/LangContext'
-import Navbar  from './components/Navbar'
-import Hero    from './components/Hero'
-import Projects from './components/Projects'
-import About   from './components/About'
-import Skills          from './components/Skills'
-import Recommendations  from './components/Recommendations'
-import Journey from './components/Journey'
-import Contact from './components/Contact'
+import Home                from './pages/Home'
+import ProjetoMercadoPago  from './pages/ProjetoMercadoPago'
 
-function ScrollToTop() {
-  useEffect(() => { window.scrollTo(0, 0) }, [])
-  return null
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { error: null } }
+  static getDerivedStateFromError(e) { return { error: e } }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 40, fontFamily: 'monospace', background: '#fff', color: '#c00' }}>
+          <h2>Runtime Error</h2>
+          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            {this.state.error?.message}
+            {'\n\n'}
+            {this.state.error?.stack}
+          </pre>
+        </div>
+      )
+    }
+    return this.props.children
+  }
 }
 
 export default function App() {
   return (
-    <LangProvider>
-    <ThemeProvider>
-      <ScrollToTop />
-      <div className="min-h-svh w-full">
-        <Navbar />
-        <main>
-          <Hero />
-          <Projects />
-          <About />
-          <Skills />
-          <Recommendations />
-          <Journey />
-        </main>
-        <Contact />
-      </div>
-    </ThemeProvider>
-    </LangProvider>
+    <ErrorBoundary>
+      <LangProvider>
+        <ThemeProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/projeto/mercado-pago" element={<ProjetoMercadoPago />} />
+            </Routes>
+          </BrowserRouter>
+        </ThemeProvider>
+      </LangProvider>
+    </ErrorBoundary>
   )
 }

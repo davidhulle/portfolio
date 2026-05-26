@@ -85,7 +85,7 @@ export default function Journey() {
   const isDesktop  = useIsDesktop()
 
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
-  const rawPlanetaY = useTransform(scrollYProgress, [0, 1], [30, -80])
+  const rawPlanetaY = useTransform(scrollYProgress, [0, 0.55, 1], [10, 160, 160])
   const rawSaturnoY = useTransform(scrollYProgress, [0, 1], [0,  -110])
   const planetaY    = useSpring(rawPlanetaY, { stiffness: 55, damping: 18 })
   const saturnoY    = useSpring(rawSaturnoY, { stiffness: 55, damping: 18 })
@@ -148,22 +148,27 @@ export default function Journey() {
         style={{ background: 'var(--bg-white)', position: 'relative', overflow: 'clip' }}
       >
         {/* planeta — top-left */}
-        <motion.img
-          src="/images/planeta.svg"
-          alt="" aria-hidden="true" draggable={false}
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
           style={{
             position:      'absolute',
             top:           '40px',
             left:          '-100px',
             width:         '490px',
             height:        'auto',
-            filter:        decorFilter,
             pointerEvents: 'none',
             userSelect:    'none',
             zIndex:        0,
-            y:             planetaY,
           }}
-        />
+        >
+          <motion.img
+            src="/images/planeta.svg"
+            alt="" aria-hidden="true" draggable={false}
+            style={{ width: '100%', height: 'auto', filter: decorFilter, display: 'block', y: planetaY }}
+          />
+        </motion.div>
 
         {/* saturno — bottom-right, mirrored + rotated */}
         <motion.img
@@ -196,9 +201,9 @@ export default function Journey() {
             {/* Left: Heading — sticky until last dot */}
             <div style={linePos?.stickyH ? { height: linePos.stickyH, alignSelf: 'start' } : {}}>
               <motion.h2
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 40 }}
                 animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 style={{ ...heading.style, color: textColor, margin: 0, position: 'sticky', top: '144px' }}
               >
                 {heading.content}
@@ -364,22 +369,27 @@ export default function Journey() {
       style={{ background: 'var(--bg-white)', position: 'relative', overflow: 'clip' }}
     >
       {/* planeta — top-right */}
-      <motion.img
-        src="/images/planeta.svg"
-        alt="" aria-hidden="true" draggable={false}
+      <motion.div
+        initial={{ opacity: 0, y: 60 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
         style={{
           position:      'absolute',
           top:           '50px',
           right:         '-30px',
           width:         '220px',
           height:        'auto',
-          filter:        decorFilter,
           pointerEvents: 'none',
           userSelect:    'none',
           zIndex:        0,
-          y:             planetaY,
         }}
-      />
+      >
+        <motion.img
+          src="/images/planeta.svg"
+          alt="" aria-hidden="true" draggable={false}
+          style={{ width: '100%', height: 'auto', filter: decorFilter, display: 'block', y: planetaY }}
+        />
+      </motion.div>
 
       {/* saturno — bottom-right, mirrored + rotated */}
       <motion.img
@@ -405,9 +415,9 @@ export default function Journey() {
 
         {/* Heading */}
         <motion.h2
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 40 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           style={{ ...heading.style, color: textColor, margin: 0 }}
         >
           {heading.content}

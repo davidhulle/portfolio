@@ -113,7 +113,7 @@ export default function Skills() {
           }}
         />
 
-        <div style={{ padding: '144px 162px', position: 'relative', zIndex: 1 }}>
+        <div style={{ padding: '144px 162px 160px', position: 'relative', zIndex: 1 }}>
 
           {/* Heading */}
           <motion.h2

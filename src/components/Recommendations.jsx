@@ -667,20 +667,27 @@ export default function Recommendations() {
       <>
         <section id="recomendacoes" ref={ref} style={{ overflow: 'hidden', padding: '16px', background: 'var(--bg-white)', height: '100svh' }}>
           <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, y: 60 }} animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             style={{ position: 'relative', background: '#9E0015', backgroundImage: "url('/images/degrade.png')", backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '40px', overflow: 'hidden', height: '100%', display: 'flex' }}
           >
-            <motion.img src="/images/balao.svg" alt="" aria-hidden="true"
-              style={{ position: 'absolute', left: '-32px', top: '-26px', width: '711px', height: '540px', pointerEvents: 'none', userSelect: 'none', zIndex: 1, y: iY }} />
+            <motion.div
+              initial={{ opacity: 0, y: 60 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              style={{ position: 'absolute', left: '-32px', top: '-26px', width: '711px', height: '540px', pointerEvents: 'none', userSelect: 'none', zIndex: 1 }}
+            >
+              <motion.img src="/images/balao.svg" alt="" aria-hidden="true"
+                style={{ width: '100%', height: '100%', y: iY }} />
+            </motion.div>
 
             {/* Left content */}
             <div style={{ flex: '1 1 50%', minWidth: 0, padding: `clamp(80px, 14vw, 229px) 40px 96px ${winW >= 1440 ? '8vw' : 'clamp(32px, 9vw, 140px)'}`, display: 'flex', flexDirection: 'column', position: 'relative', zIndex: winW >= 1680 ? 3 : 2 }}>
-              <motion.h2 initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              <motion.h2 initial={{ opacity: 0, y: 40 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 style={{ fontFamily: "'Network', sans-serif", fontSize: 'clamp(56px, 7.5vw, 128px)', fontWeight: 400, lineHeight: 0.86, color: '#FFFFFF', margin: 0, maxWidth: '776px' }}>
                 {t('recs.heading')}
               </motion.h2>
-              <motion.p initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+              <motion.p initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
                 style={{ fontFamily: "'Inter', sans-serif", fontSize: 'clamp(16px, 1.6vw, 24px)', fontWeight: 300, lineHeight: '1.4', color: '#FFFFFF', marginTop: '24px', maxWidth: '623px' }}>
                 {t('recs.desc')}
               </motion.p>
@@ -689,7 +696,12 @@ export default function Recommendations() {
             {/* Right: track + pager */}
             <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}
               style={{ flex: '0 0 45%', marginLeft: winW >= 1680 ? '-120px' : 0, position: 'relative', zIndex: 2, display: 'flex', alignItems: 'stretch' }}>
-              <div style={{ flex: 1, height: '100%', overflow: 'hidden', paddingRight: winW >= 1440 ? 'calc(8vw + 48px)' : '72px', maskImage: 'linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)' }}>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={inView ? { opacity: 1 } : {}}
+                transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                style={{ flex: 1, height: '100%', overflow: 'hidden', paddingRight: winW >= 1440 ? 'calc(8vw + 48px)' : '72px', maskImage: 'linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)' }}
+              >
                 <motion.div style={{ y: yMV }}>
                   {EXTENDED.map((t, i) => (
                     <div key={i} style={{ marginBottom: i < EXTENDED.length - 1 ? `${GAP}px` : 0 }}>
@@ -697,9 +709,14 @@ export default function Recommendations() {
                     </div>
                   ))}
                 </motion.div>
-              </div>
+              </motion.div>
               {/* Pager */}
-              <div style={{ position: 'absolute', right: winW >= 1440 ? '8vw' : '16px', top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+              <motion.div
+                initial={{ opacity: 0, x: 40 }}
+                animate={inView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                style={{ position: 'absolute', right: winW >= 1440 ? '8vw' : '16px', top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}
+              >
                 <button onClick={prev} aria-label={t('recs.prev')} style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
                   <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><path d="M1 9L8 2L15 9" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </button>
@@ -707,7 +724,7 @@ export default function Recommendations() {
                 <button onClick={next} aria-label={t('recs.next')} style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
                   <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><path d="M1 1L8 8L15 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </button>
-              </div>
+              </motion.div>
             </div>
           </motion.div>
         </section>
@@ -723,28 +740,40 @@ export default function Recommendations() {
     <>
       <section id="recomendacoes" ref={ref} style={{ overflow: 'hidden', padding: '8px 8px', background: 'var(--bg-white)', minHeight: '100svh', display: 'flex', flexDirection: 'column' }}>
         <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          initial={{ opacity: 0, y: 60 }} animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
           style={{ position: 'relative', background: '#9E0015', backgroundImage: "url('/images/degrade.png')", backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '50px', overflow: 'hidden', flex: 1 }}
         >
-          <motion.img src="/images/balao.svg" alt="" aria-hidden="true"
-            style={{ position: 'absolute', left: '97px', top: '-9px', width: '328px', height: '249px', pointerEvents: 'none', userSelect: 'none', zIndex: 1, y: iY }} />
+          <motion.div
+            initial={{ opacity: 0, y: 60 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            style={{ position: 'absolute', left: '97px', top: '-9px', width: '328px', height: '249px', pointerEvents: 'none', userSelect: 'none', zIndex: 1 }}
+          >
+            <motion.img src="/images/balao.svg" alt="" aria-hidden="true"
+              style={{ width: '100%', height: '100%', y: iY }} />
+          </motion.div>
 
           {/* Text content */}
           <div style={{ position: 'relative', zIndex: 2, padding: '140px 24px 0' }}>
-            <motion.h2 initial={{ opacity: 0, y: 24 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            <motion.h2 initial={{ opacity: 0, y: 40 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
               style={{ fontFamily: "'Network', sans-serif", fontSize: '56px', fontWeight: 400, lineHeight: '57px', color: '#FFFFFF', margin: 0 }}>
               {t('recs.heading')}
             </motion.h2>
-            <motion.p initial={{ opacity: 0, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            <motion.p initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
               style={{ fontFamily: "'Inter', sans-serif", fontSize: '16px', fontWeight: 300, lineHeight: '1.23', color: '#FFFFFF', marginTop: '32px', maxWidth: '366px' }}>
               {t('recs.desc')}
             </motion.p>
           </div>
 
           {/* Carousel */}
-          <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}
-            style={{ position: 'relative', zIndex: 2, marginTop: '64px', overflow: 'hidden' }}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : {}}
+            transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}
+            style={{ position: 'relative', zIndex: 2, marginTop: '64px', overflow: 'hidden' }}
+          >
             {isTablet ? (
               /* ── Peek carousel (1024–1279px) — infinite loop via EXTENDED ── */
               <motion.div style={{ display: 'flex', gap: `${TAB_GAP}px`, x: xMV }}>
@@ -774,12 +803,17 @@ export default function Recommendations() {
                 ))}
               </motion.div>
             )}
-          </div>
+          </motion.div>
 
           {/* Dots */}
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0 40px' }}>
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={inView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            style={{ display: 'flex', justifyContent: 'center', padding: '24px 0 40px' }}
+          >
             <DotPager active={activeIndex} total={N} vertical={false} onGoto={gotoSlide} />
-          </div>
+          </motion.div>
         </motion.div>
       </section>
 

@@ -150,6 +150,7 @@ function IntroSection({ isDesktop, isDark, t }) {
         flexDirection: isDesktop ? 'row' : 'column',
         alignItems:    isDesktop ? 'center' : 'flex-start',
         gap:           isDesktop ? '80px' : '64px',
+        minHeight:     isDesktop ? '100svh' : undefined,
       }}
     >
       <motion.div
@@ -269,9 +270,9 @@ function ProblemSection({ isDesktop, isDark, t }) {
         display:       'flex',
         flexDirection: isDesktop ? 'row' : 'column-reverse',
         gap:           isDesktop ? '80px' : '64px',
-        alignItems:    'flex-start',
+        alignItems:    isDesktop ? 'center' : 'flex-start',
         position:      'relative',
-        minHeight:     isDesktop ? '80vh' : undefined,
+        minHeight:     isDesktop ? '100svh' : undefined,
       }}
     >
       {/* Left — Old UI screenshot */}
@@ -325,10 +326,8 @@ function ProblemSection({ isDesktop, isDark, t }) {
           flexDirection: 'column',
           gap:           48,
           paddingRight:  isDesktop ? pad : undefined,
-          paddingTop:    isDesktop ? '128px' : undefined,
           position:      isDesktop ? 'sticky' : 'static',
           top:           isDesktop ? '120px' : undefined,
-          alignSelf:     isDesktop ? 'flex-start' : undefined,
         }}
       >
         <h2 style={T.sectionTitle(isDesktop, isDark)}>
@@ -457,7 +456,7 @@ function StrategySection2({ isDesktop, isDark, t }) {
         flexDirection: isDesktop ? 'row' : 'column',
         gap:           isDesktop ? '80px' : '64px',
         alignItems:    isDesktop ? 'center' : 'flex-start',
-        minHeight:     isDesktop ? '80vh' : undefined,
+        minHeight:     isDesktop ? '100svh' : undefined,
       }}
     >
       {isDesktop && (
@@ -561,7 +560,13 @@ function VideoSection({ isDesktop, isDark }) {
   const pad = isDesktop ? '162px' : '24px'
 
   return (
-    <section ref={ref} style={{ padding: isDesktop ? `40px ${pad}` : '40px 0' }}>
+    <section ref={ref} style={{
+      padding:        isDesktop ? `40px ${pad}` : '40px 0',
+      minHeight:      isDesktop ? '100svh' : undefined,
+      display:        isDesktop ? 'flex' : undefined,
+      flexDirection:  isDesktop ? 'column' : undefined,
+      justifyContent: isDesktop ? 'center' : undefined,
+    }}>
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -639,10 +644,14 @@ function ResultsBusinessSection({ isDesktop, isDark, t }) {
     <section
       ref={ref}
       style={{
-        paddingTop:    isDesktop ? '120px' : '80px',
-        paddingBottom: isDesktop ? '80px' : '0',
-        paddingLeft:   isDesktop ? '324px' : '24px',
-        paddingRight:  isDesktop ? 0 : '24px',
+        paddingTop:     isDesktop ? '100px' : '80px',
+        paddingBottom:  isDesktop ? '100px' : '0',
+        paddingLeft:    isDesktop ? '324px' : '24px',
+        paddingRight:   isDesktop ? 0 : '24px',
+        minHeight:      isDesktop ? '100svh' : undefined,
+        display:        isDesktop ? 'flex' : undefined,
+        flexDirection:  isDesktop ? 'column' : undefined,
+        justifyContent: isDesktop ? 'center' : undefined,
       }}
     >
       <motion.div
@@ -744,9 +753,14 @@ function ResultsExperienceSection({ isDesktop, isDark, t }) {
       ref={ref}
       style={{
         paddingTop:    isDesktop ? '80px' : '80px',
-        paddingBottom: isDesktop ? '180px' : '80px',
-        paddingLeft:   isDesktop ? '324px' : '24px',
-        paddingRight:  isDesktop ? 0 : '24px',
+        paddingTop:     isDesktop ? '120px' : '80px',
+        paddingBottom:  isDesktop ? '120px' : '80px',
+        paddingLeft:    isDesktop ? '324px' : '24px',
+        paddingRight:   isDesktop ? 0 : '24px',
+        minHeight:      isDesktop ? '100svh' : undefined,
+        display:        isDesktop ? 'flex' : undefined,
+        flexDirection:  isDesktop ? 'column' : undefined,
+        justifyContent: isDesktop ? 'center' : undefined,
       }}
     >
       <motion.div
@@ -798,6 +812,7 @@ export default function ProjetoMercadoPago() {
 
   useEffect(() => { window.scrollTo(0, 0) }, [])
 
+
   const resultsRef  = useRef(null)
   const { scrollYProgress } = useScroll({
     target:  resultsRef,
@@ -837,7 +852,7 @@ export default function ProjetoMercadoPago() {
               alignSelf:     'flex-start',
               paddingRight:  '16%',
               paddingTop:    '120px',
-              paddingBottom: '180px',
+              paddingBottom: '120px',
             }}>
               <motion.img
                 src={IMG.imgResultados}

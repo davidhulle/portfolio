@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion'
 import { useInView } from '../hooks/useInView'
 import { useTextStyle } from '../hooks/useTextStyle'
 import { useTheme } from '../context/ThemeContext'
@@ -54,6 +54,16 @@ export default function Projects() {
     return () => window.removeEventListener('resize', onResize)
   }, [])
   const isDesktop               = padX === 162
+  const decorFilter             = isDark ? 'brightness(0.21)' : 'none'
+
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
+  const rawRaioY    = useTransform(scrollYProgress, [0, 1], [80, -120])
+  const rawHeadingY = useTransform(scrollYProgress, [0, 1], [0,  -55])
+  const rawCardsY   = useTransform(scrollYProgress, [0, 1], [0,  -20])
+  const raioY       = useSpring(rawRaioY,    { stiffness: 50, damping: 16 })
+  const headingY    = useSpring(rawHeadingY, { stiffness: 60, damping: 20 })
+  const cardsY      = useSpring(rawCardsY,   { stiffness: 60, damping: 20 })
+
   const cardW                   = isDesktop ? 786 : winW - padX - 60
   const carouselH               = isDesktop ? 430 : Math.max(482, Math.round(winH * 0.687))
 
@@ -237,12 +247,32 @@ export default function Projects() {
   return (
     <section id="projetos" ref={ref} className="bg-[var(--bg-secondary)] overflow-hidden" style={{ minHeight: '100vh', position: 'relative' }}>
 
+      {/* Raio — decorative, background parallax */}
+      <motion.img
+        src="/images/coroa.svg"
+        alt="" aria-hidden="true"
+        style={{
+          position:      'absolute',
+          right:         isDesktop ? '-20px' : '-10px',
+          top:           isDesktop ? '190px' : '130px',
+          width:         isDesktop ? '280px' : '160px',
+          height:        'auto',
+          pointerEvents: 'none',
+          filter:        decorFilter,
+          zIndex:        0,
+          y:             raioY,
+        }}
+      />
+
       {/* Vertical padding: mobile 80/16 · desktop 125/185 */}
       <div style={{ paddingTop: padX === 162 ? '125px' : '112px', paddingBottom: padX === 162 ? '185px' : '80px', position: 'relative', zIndex: 1 }}>
 
         {/* ── Header row ── */}
-        <div
-          style={{ paddingLeft: `${padX}px`, paddingRight: `${padX}px` }}
+        <motion.div
+          initial={{ opacity: 0, x: -32 }}
+          animate={inView ? { opacity: 1, x: 0 } : {}}
+          transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          style={{ paddingLeft: `${padX}px`, paddingRight: `${padX}px`, y: headingY }}
           className="flex items-end justify-between"
         >
           <h2
@@ -251,15 +281,10 @@ export default function Projects() {
           >
             {heading.content}
           </h2>
-        </div>
+        </motion.div>
 
         {/* ── Carousel: left padding matches header, right adds trailing space ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 36 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.65, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-          style={{ marginTop: isDesktop ? '-40px' : '-16px', position: 'relative', zIndex: 1 }}
-        >
+        <motion.div style={{ marginTop: isDesktop ? '-40px' : '-16px', position: 'relative', zIndex: 1, y: cardsY }}>
           <div
             ref={scrollRef}
             className="no-scrollbar"
@@ -278,10 +303,13 @@ export default function Projects() {
             onMouseDown={onMouseDown}
           >
           {projects.map((p, i) => (
-            <article
+            <motion.article
               key={p.id}
               data-card
               className="relative group"
+              initial={{ y: 560 }}
+              animate={inView ? { y: 0 } : {}}
+              transition={{ duration: 0.9, delay: 0.3 + i * 0.15, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 scrollSnapAlign: 'start',
                 width:           `${cardW}px`,
@@ -368,7 +396,7 @@ export default function Projects() {
                       alignSelf:         'stretch',
                       color:             '#FFF',
                       fontFamily:        'ABCWhyteInktrap, sans-serif',
-                      fontSize:          isDesktop ? '24px' : '20px',
+                      fontSize:          isDesktop ? '24px' : '18px',
                       fontStyle:         'normal',
                       fontWeight:        700,
                       lineHeight:        'normal',
@@ -428,20 +456,26 @@ export default function Projects() {
                 </div>
               </div>
               </motion.div>
-            </article>
+            </motion.article>
           ))}
         </div>
 
           {/* Mobile nav — centered, 24px below cards */}
-          <div className="md:hidden flex justify-center" style={{ marginTop: '24px' }}>
+          <motion.div
+            className="md:hidden flex justify-center"
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : {}}
+            transition={{ delay: 0.45, duration: 0.6 }}
+            style={{ marginTop: '24px' }}
+          >
             {nav}
-          </div>
+          </motion.div>
 
           {/* Desktop nav — left-aligned, 32px below cards */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={inView ? { opacity: 1 } : {}}
-            transition={{ delay: 0.3, duration: 0.5 }}
+            transition={{ delay: 0.45, duration: 0.6 }}
             className="hidden md:flex"
             style={{ paddingLeft: `${padX}px`, marginTop: '32px' }}
           >

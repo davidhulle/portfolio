@@ -78,7 +78,7 @@ const translations = {
 
     // Projects
     'projects.0.title': 'Redesign da Landing Page',
-    'projects.1.title': 'App de Supermercado',
+    'projects.1.title': 'Aplicativo de Mercado',
     'projects.2.title': 'Abertura de Conta Agro',
     'projects.3.title': 'Ecommerce e App de vinhos',
     'projects.4.title': 'Ecommerce de sapatos em Portugal',
@@ -380,7 +380,7 @@ const translations = {
 
     // Projects
     'projects.0.title': 'Landing Page Redesign',
-    'projects.1.title': 'Supermarket App',
+    'projects.1.title': 'Grocery Market App',
     'projects.2.title': 'Agro Account Opening',
     'projects.3.title': 'Ecommerce and Wine App',
     'projects.4.title': 'Footwear Ecommerce in Portugal',
@@ -653,7 +653,7 @@ const translations = {
 
     // Projects
     'projects.0.title': 'Rediseño de Landing Page',
-    'projects.1.title': 'App de Supermercado',
+    'projects.1.title': 'Aplicación de Mercado',
     'projects.2.title': 'Apertura de Cuenta Agro',
     'projects.3.title': 'Ecommerce y App de vinos',
     'projects.4.title': 'Ecommerce de calzado en Portugal',

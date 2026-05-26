@@ -102,3 +102,56 @@ const { t } = useLang()
 - [ ] Fontes ≥ 12px em conteúdo
 - [ ] Nenhum `outline: none` sem substituto
 - [ ] Animações respeitam `prefers-reduced-motion`
+
+---
+
+## Dark mode obrigatório em toda página e componente
+
+Este projeto usa `ThemeContext` com `data-theme="dark"` no `<html>` e variáveis CSS em `src/index.css`.
+
+**Toda página nova e todo componente com cor de fundo ou texto hardcoded deve obrigatoriamente suportar dark mode na mesma entrega.** Não aceitar código com cores hardcoded que só funciona em light mode.
+
+### Padrão de implementação
+
+```jsx
+// 1. Importar o hook
+import { useTheme } from '../context/ThemeContext'
+
+// 2. Extrair isDark dentro do componente (ou receber como prop de página pai)
+const { isDark } = useTheme()
+
+// 3. Usar isDark em inline styles — NÃO usar classes Tailwind para cores de tema
+<div style={{ background: isDark ? '#0A0A0A' : '#ffffff' }}>
+<p style={{ color: isDark ? '#F5F2EE' : '#0A0A0A' }}>
+```
+
+### Paleta de referência aprovada
+
+| Papel              | Light                  | Dark                          |
+|--------------------|------------------------|-------------------------------|
+| Fundo principal    | `#ffffff`              | `#0A0A0A`                     |
+| Fundo secundário   | `#F5F2EE`              | `#101010`                     |
+| Fundo card         | `#F4F4F4`              | `#141414`                     |
+| Fundo placeholder  | `#D4D4D4`              | `#1E1E1E`                     |
+| Texto principal    | `#0A0A0A`              | `#F5F2EE`                     |
+| Texto corpo 70%    | `rgba(0,0,0,0.7)`      | `rgba(245,242,238,0.7)`       |
+| Texto corpo 80%    | `rgba(0,0,0,0.8)`      | `rgba(245,242,238,0.8)`       |
+| Texto label muted  | `rgba(10,10,10,0.5)`   | `rgba(245,242,238,0.5)`       |
+| Subtítulo muted    | `#666666`              | `#777777`                     |
+| Sombra card        | `rgba(0,0,0,0.1)`      | `rgba(0,0,0,0.5)`             |
+| Variáveis CSS      | `var(--bg)`            | automático via `data-theme`   |
+
+### Regra para novas páginas
+
+Toda página criada em `src/pages/` deve:
+1. Importar `useTheme` e extrair `isDark`
+2. Passar `isDark` como prop para todos os subcomponentes que usam cor
+3. Aplicar `transition: 'background-color 0.4s ease'` no `<main>` para a troca de tema ser fluida
+4. Verificar light E dark antes de considerar a entrega concluída
+
+### Checklist antes de entregar qualquer página
+- [ ] Fundo do `<main>` usa `isDark` (não hardcoded `#fff`)
+- [ ] Todos os textos têm variante dark
+- [ ] Placeholders, cards e painéis têm variante dark
+- [ ] Sombras têm variante dark (mais opacas)
+- [ ] `transition: background-color 0.4s ease` no container raiz da página

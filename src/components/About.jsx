@@ -37,13 +37,13 @@ function useCounter(target, inView, duration = 1800) {
   return count
 }
 
-function StatRow({ stat, sectionInView, statsInView, delay, isDesktop, isDark }) {
-  const count = useCounter(stat.value, sectionInView || statsInView)
+function StatRow({ stat, statsInView, delay, isDesktop, isDark }) {
+  const count = useCounter(stat.value, statsInView)
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={sectionInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay }}
+      initial={{ opacity: 0, y: 32 }}
+      animate={statsInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] }}
       style={{
         display:        'flex',
         alignItems:     'center',
@@ -139,7 +139,7 @@ export default function About() {
       style={{ marginTop: '64px', display: 'flex', flexDirection: 'column', gap: '48px' }}
     >
       {stats.map((stat, i) => (
-        <StatRow key={i} stat={stat} sectionInView={inView} statsInView={statsInView} delay={0.35 + i * 0.12} isDesktop={isDesktop} isDark={isDark} />
+        <StatRow key={i} stat={stat} statsInView={statsInView} delay={0.1 + i * 0.15} isDesktop={isDesktop} isDark={isDark} />
       ))}
     </div>
   )
@@ -155,9 +155,9 @@ export default function About() {
       >
         {/* Heading — absolutely centered across the full section width */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: 40 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           style={{
             position:       'absolute',
             top:            '136px',
@@ -179,9 +179,9 @@ export default function About() {
           src="/images/raio.svg"
           alt=""
           aria-hidden="true"
-          initial={{ opacity: 0 }}
-          animate={inView ? { opacity: 1 } : {}}
-          transition={{ duration: 1, delay: 0.5 }}
+          initial={{ opacity: 0, y: 80 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
           style={{
             position:      'absolute',
             left:          '18px',
@@ -204,14 +204,14 @@ export default function About() {
           paddingLeft:         '162px',
           paddingRight:        '162px',
           paddingTop:          '229px',
-          paddingBottom:       '80px',
+          paddingBottom:       '160px',
         }}>
 
           {/* Left — sticky photo */}
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={inView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, y: 60 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             style={{
               position:  'sticky',
               top:       '100px',
@@ -231,9 +231,9 @@ export default function About() {
 
           {/* Right — bio + stats, pushed down to clear the heading */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.8, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
             style={{ paddingTop: '261px' }}
           >
             {bioEl}
@@ -254,9 +254,9 @@ export default function About() {
         src="/images/raio.svg"
         alt=""
         aria-hidden="true"
-        initial={{ opacity: 0 }}
-        animate={inView ? { opacity: 1 } : {}}
-        transition={{ duration: 1, delay: 0.5 }}
+        initial={{ opacity: 0, y: 80 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
         style={{
           position:      'absolute',
           left:          '-23px',
@@ -275,9 +275,9 @@ export default function About() {
 
         {/* Heading centered, overlapping photo top */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 40 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           style={{ position: 'relative', zIndex: 10, marginBottom: '-28px', display: 'flex', justifyContent: 'center' }}
         >
           <h2 style={{ ...heading.style, whiteSpace: 'pre-line', textAlign: 'center' }}>
@@ -288,9 +288,9 @@ export default function About() {
 
         {/* Photo */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 60 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           style={{ position: 'relative', borderRadius: '20px', overflow: 'hidden', aspectRatio: '3 / 4' }}
         >
           <img
@@ -302,9 +302,9 @@ export default function About() {
 
         {/* Bio */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 40 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.8, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
           style={{ marginTop: '32px' }}
         >
           {bioEl}

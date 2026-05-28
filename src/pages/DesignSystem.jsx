@@ -1,258 +1,241 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from '../context/ThemeContext'
 
-// ─── Design Tokens ──────────────────────────────────────────────────────────
+// ─── Design Tokens (aligned to design-system repo) ──────────────────────────
 
 const BRAND_REDS = [
-  { name: 'Red 50',  hex: '#FFF0F0' },
-  { name: 'Red 100', hex: '#FFD6D6' },
-  { name: 'Red 200', hex: '#FFADAD' },
-  { name: 'Red 300', hex: '#FF7A8A' },
-  { name: 'Red 400', hex: '#FF6B6B' },
-  { name: 'Red 500', hex: '#EF3537', label: 'Brand' },
-  { name: 'Red 600', hex: '#D41F21' },
-  { name: 'Red 700', hex: '#9E0015', label: 'Crimson' },
-  { name: 'Red 800', hex: '#7A0010' },
-  { name: 'Red 900', hex: '#560009' },
+  { token: 'red-900', hex: '#6B000E', role: 'Shadow',   dark: true },
+  { token: 'red-800', hex: '#861D1E', role: 'Heritage', dark: true },
+  { token: 'red-700', hex: '#9E0015', role: 'Brand ★',  dark: true },
+  { token: 'red-500', hex: '#EF3537', role: 'Accent',   dark: true },
+  { token: 'red-400', hex: '#E6332B', role: 'Signal',   dark: true },
+  { token: 'red-200', hex: '#FCDADA', role: 'Soft',     dark: false },
 ]
 
 const NEUTRALS = [
-  { name: 'White',         hex: '#FFFFFF' },
-  { name: 'Neutral 50',    hex: '#F5F2EE', label: 'BG Light' },
-  { name: 'Neutral 100',   hex: '#F4F4F4' },
-  { name: 'Neutral 200',   hex: '#E5E5E5' },
-  { name: 'Neutral 300',   hex: '#D4D4D4' },
-  { name: 'Neutral 400',   hex: '#999999' },
-  { name: 'Neutral 500',   hex: '#777777' },
-  { name: 'Neutral 600',   hex: '#666666' },
-  { name: 'Neutral 700',   hex: '#333333' },
-  { name: 'Neutral 800',   hex: '#1E1E1E' },
-  { name: 'Neutral 900',   hex: '#141414' },
-  { name: 'Neutral 950',   hex: '#101010' },
-  { name: 'Black',         hex: '#0A0A0A', label: 'BG Dark' },
-]
-
-const SEMANTIC = [
-  { name: 'Success 400', hex: '#4ADE80' },
-  { name: 'Success 600', hex: '#16A34A' },
-  { name: 'Warning 400', hex: '#FCD34D' },
-  { name: 'Warning 600', hex: '#D97706' },
-  { name: 'Info 400',    hex: '#60A5FA' },
-  { name: 'Info 600',    hex: '#2563EB' },
-  { name: 'Gold 400',    hex: '#F5C842' },
-  { name: 'Gold 600',    hex: '#B8860B' },
+  { token: 'black',     hex: '#0A0A0A', role: 'FG',          dark: true  },
+  { token: 'gray-900',  hex: '#191919', role: 'Surface inv.', dark: true  },
+  { token: 'gray-700',  hex: '#333333', role: 'FG strong',    dark: true  },
+  { token: 'gray-600',  hex: '#666666', role: 'FG muted',     dark: true  },
+  { token: 'gray-300',  hex: '#CFC2C2', role: 'Border',       dark: false },
+  { token: 'cream-100', hex: '#F5F2EE', role: 'Surface',      dark: false },
 ]
 
 const GRADIENTS = [
-  { name: 'Brand',        css: 'linear-gradient(135deg, #9E0015 0%, #EF3537 50%, #FF6B6B 100%)' },
-  { name: 'Hero',         css: 'linear-gradient(140deg, #9E0015 0%, #C41230 30%, #EF3537 65%, #FF4D6B 85%, #FF7A8A 100%)' },
-  { name: 'Rose',         css: 'linear-gradient(135deg, #EF3537 0%, #FF7A8A 50%, #FFAAB5 100%)' },
-  { name: 'Sunset',       css: 'linear-gradient(135deg, #9E0015 0%, #EF3537 50%, #D97706 100%)' },
-  { name: 'Noir',         css: 'linear-gradient(135deg, #0A0A0A 0%, #1E1E1E 50%, #333333 100%)' },
-  { name: 'Smoke',        css: 'linear-gradient(135deg, #333333 0%, #666666 100%)' },
-  { name: 'Glass Dark',   css: 'linear-gradient(135deg, rgba(26,26,26,0.92) 0%, rgba(10,10,10,0.72) 100%)' },
-  { name: 'Glass Light',  css: 'linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(245,242,238,0.65) 100%)' },
+  {
+    token: 'grad-red-sunset',
+    label: 'Signature',
+    context: 'Hero · testimonials',
+    css: 'linear-gradient(180deg, #DF0000 0%, #E41B2A 35%, #E52741 60%, #EA445A 85%, #FC593C 100%)',
+  },
+  {
+    token: 'grad-red-warm',
+    label: 'Portrait overlay',
+    context: 'Photos',
+    css: 'linear-gradient(180deg, #FF1F1F 0%, #EF3537 45%, #FF6B5A 100%)',
+  },
+  {
+    token: 'grad-coral-glow',
+    label: 'Spotlight',
+    context: 'Big numbers',
+    css: 'radial-gradient(120% 90% at 80% 110%, #FC593C 0%, #EA445A 25%, #E5213B 55%, #DF0000 90%)',
+  },
+  {
+    token: 'grad-red-deep',
+    label: 'Heritage',
+    context: 'Section anchors',
+    css: 'linear-gradient(180deg, #9E0015 0%, #6B000E 70%, #2A0008 100%)',
+  },
 ]
 
 const FONT_FAMILIES = [
-  { name: 'Network',          var: 'Network, cursive',             role: 'Display',   sample: 'Portfolio' },
-  { name: 'ABCWhyteInktrap',  var: 'ABCWhyteInktrap, sans-serif',  role: 'Accent',    sample: 'Card Heading' },
-  { name: 'ABCWhyte',         var: 'ABCWhyte, sans-serif',         role: 'Heading',   sample: 'Section Title' },
-  { name: 'ABCWhyteMono',     var: 'ABCWhyteMono, monospace',      role: 'Mono',      sample: 'Label & Tag' },
-  { name: 'Inter',            var: 'Inter, sans-serif',            role: 'Body',      sample: 'Body text and descriptions for content areas.' },
+  { name: 'Network',         role: 'Display',   css: 'Network, cursive',            desc: 'Editorial. 56–258px. Títulos de seção e grandes saudações.' },
+  { name: 'ABCWhyteInktrap', role: 'Heading',   css: 'ABCWhyteInktrap, sans-serif', desc: 'Subheads, cards e UI. 20–64px. Bold para impacto, Medium para subhead.' },
+  { name: 'ABCWhyte',        role: 'Sans',      css: 'ABCWhyte, sans-serif',        desc: 'Nomes, cargos e rótulos. Light / Regular / Medium.' },
+  { name: 'ABCWhyteMono',    role: 'Mono',      css: 'ABCWhyteMono, monospace',     desc: 'Datas, tags, kickers. SEMPRE UPPERCASE com +0.05em tracking.' },
+  { name: 'Inter',           role: 'Body',      css: 'Inter, sans-serif',           desc: 'Texto corrido e descrições. 14–18px. Pesos 400–600.' },
 ]
 
 const TYPE_SCALE = [
-  { name: 'xs',   size: '11px', lh: '16px' },
-  { name: 'sm',   size: '12px', lh: '18px' },
-  { name: 'base', size: '14px', lh: '20px' },
-  { name: 'md',   size: '16px', lh: '24px' },
-  { name: 'lg',   size: '18px', lh: '28px' },
-  { name: 'xl',   size: '20px', lh: '30px' },
-  { name: '2xl',  size: '24px', lh: '32px' },
-  { name: '3xl',  size: '32px', lh: '40px' },
-  { name: '4xl',  size: '48px', lh: '56px' },
-  { name: '5xl',  size: '64px', lh: '72px' },
+  { name: 'display-xl', size: '120px', lh: '0.85', family: 'Network, cursive',            specimen: 'Olá!',           red: true  },
+  { name: 'display-lg', size: '72px',  lh: '0.86', family: 'Network, cursive',            specimen: 'Projetos'               },
+  { name: 'display-md', size: '56px',  lh: '0.88', family: 'Network, cursive',            specimen: 'Sobre mim',      red: true  },
+  { name: 'heading-h1', size: '40px',  lh: '1.05', family: 'ABCWhyteInktrap, sans-serif', specimen: 'UX/UI Design Leader'    },
+  { name: 'heading-h2', size: '28px',  lh: '1.07', family: 'ABCWhyteInktrap, sans-serif', specimen: 'Experiência Técnica',    red: true  },
+  { name: 'body-lg',    size: '18px',  lh: '1.4',  family: 'Inter, sans-serif',           specimen: 'Sou um líder de Design com mais de 15 anos construindo produtos digitais de alto impacto.' },
+  { name: 'body-md',    size: '15px',  lh: '1.5',  family: 'Inter, sans-serif',           specimen: 'Já atuei em grandes empresas como Wine, Itaú e Mercado Livre, sempre com o pé no negócio e o olho nas pessoas.' },
+  { name: 'mono-uc',    size: '11px',  lh: '1.0',  family: 'ABCWhyteMono, monospace',     specimen: 'UX SR MANAGER · MERCADO PAGO', upper: true },
 ]
 
-const SPACING = [4, 8, 12, 16, 24, 32, 40, 48, 56, 64, 80, 96, 120, 160, 200]
+const SPACING = [4, 8, 12, 16, 24, 32, 40, 48, 64, 80, 96, 128]
 
 const RADII = [
-  { name: 'none', value: '0px' },
-  { name: 'sm',   value: '4px' },
-  { name: 'base', value: '8px' },
-  { name: 'md',   value: '10px' },
-  { name: 'lg',   value: '12px' },
-  { name: 'xl',   value: '16px' },
-  { name: '2xl',  value: '24px' },
-  { name: '3xl',  value: '40px' },
-  { name: '4xl',  value: '50px' },
-  { name: 'full', value: '100px' },
+  { name: '4',    value: '4px',     sig: false },
+  { name: '8',    value: '8px',     sig: false },
+  { name: '16',   value: '16px',    sig: false },
+  { name: '24',   value: '24px',    sig: false },
+  { name: '40 ★', value: '40px',    sig: true  },
+  { name: 'pill', value: '9999px',  sig: false },
 ]
 
 const SHADOWS = [
-  { name: 'sm',  light: '0 2px 8px rgba(0,0,0,0.08)',   dark: '0 2px 8px rgba(0,0,0,0.35)' },
-  { name: 'md',  light: '0 4px 16px rgba(0,0,0,0.1)',   dark: '0 4px 16px rgba(0,0,0,0.45)' },
-  { name: 'lg',  light: '0 8px 32px rgba(0,0,0,0.12)',  dark: '0 8px 32px rgba(0,0,0,0.55)' },
-  { name: 'xl',  light: '0 16px 48px rgba(0,0,0,0.15)', dark: '0 16px 48px rgba(0,0,0,0.65)' },
-  { name: '2xl', light: '0 24px 64px rgba(0,0,0,0.2)',  dark: '0 24px 64px rgba(0,0,0,0.75)' },
-  { name: 'red', light: '0 8px 32px rgba(239,53,55,0.25)', dark: '0 8px 32px rgba(239,53,55,0.4)' },
+  { name: 'xs',  light: '0 1px 4px rgba(0,0,0,0.06)',   dark: '0 1px 4px rgba(0,0,0,0.3)'  },
+  { name: 'sm',  light: '0 2px 8px rgba(0,0,0,0.08)',   dark: '0 2px 8px rgba(0,0,0,0.4)'  },
+  { name: 'md',  light: '0 4px 16px rgba(0,0,0,0.1)',   dark: '0 4px 16px rgba(0,0,0,0.5)' },
+  { name: 'lg',  light: '0 8px 32px rgba(0,0,0,0.12)',  dark: '0 8px 32px rgba(0,0,0,0.6)' },
+  { name: 'xl',  light: '0 16px 48px rgba(0,0,0,0.15)', dark: '0 16px 48px rgba(0,0,0,0.7)'},
+  { name: 'red', light: '0 8px 32px rgba(158,0,21,0.25)',dark: '0 8px 32px rgba(239,53,55,0.35)'},
 ]
 
 const EASINGS = [
-  { name: 'smooth',   fm: [0.4, 0, 0.2, 1],     css: 'cubic-bezier(0.4, 0, 0.2, 1)',     desc: 'Standard UI transitions' },
-  { name: 'expo-out', fm: [0.16, 1, 0.3, 1],    css: 'cubic-bezier(0.16, 1, 0.3, 1)',    desc: 'Entrance animations' },
-  { name: 'bounce',   fm: [0.34, 1.56, 0.64, 1],css: 'cubic-bezier(0.34, 1.56, 0.64, 1)',desc: 'Playful interactions' },
-  { name: 'ease-in',  fm: [0.4, 0, 1, 1],       css: 'cubic-bezier(0.4, 0, 1, 1)',       desc: 'Exit animations' },
-  { name: 'ease-out', fm: [0, 0, 0.2, 1],       css: 'cubic-bezier(0, 0, 0.2, 1)',       desc: 'Deceleration' },
+  { name: 'smooth',   fm: [0.4,0,0.2,1],      css: 'cubic-bezier(0.4,0,0.2,1)',     desc: 'State changes' },
+  { name: 'expo-out', fm: [0.16,1,0.3,1],     css: 'cubic-bezier(0.16,1,0.3,1)',   desc: 'Entrances' },
+  { name: 'bounce',   fm: [0.34,1.56,0.64,1], css: 'cubic-bezier(0.34,1.56,0.64,1)',desc: 'Playful' },
+  { name: 'ease-in',  fm: [0.4,0,1,1],        css: 'cubic-bezier(0.4,0,1,1)',      desc: 'Exits' },
+  { name: 'ease-out', fm: [0,0,0.2,1],        css: 'cubic-bezier(0,0,0.2,1)',      desc: 'Deceleration' },
 ]
 
-const DURATIONS = [
-  { name: 'instant', value: '0.1s', desc: 'Micro-interactions' },
-  { name: 'fast',    value: '0.2s', desc: 'Hover states' },
-  { name: 'base',    value: '0.3s', desc: 'State changes' },
-  { name: 'medium',  value: '0.5s', desc: 'Panel transitions' },
-  { name: 'slow',    value: '0.7s', desc: 'Page transitions' },
-  { name: 'slower',  value: '0.9s', desc: 'Hero entrances' },
+const VOICE_CARDS = [
+  {
+    label: 'Display headline',
+    main: 'Olá!',
+    sub: '"UX/UI Design Leader · Strategy & Tech"',
+    note: 'Sentence case · pontuação como textura',
+    isDisplay: true,
+  },
+  {
+    label: 'Body voice',
+    main: '"Sou um líder de Design com mais de 15 anos construindo produtos digitais de alto impacto."',
+    sub: '"Liderei times multidisciplinares em projetos de alta complexidade para toda a América Latina."',
+    note: 'Primeira pessoa · verbos no passado · dados como prova',
+  },
+  {
+    label: 'Labels & tags',
+    main: 'FINANCE · LEADERSHIP · UX/UI',
+    sub: '2021 — 2026 · 5 anos',
+    note: 'UPPERCASE · 0.05em tracking · separator ·',
+    isMono: true,
+  },
 ]
 
-// ─── Sub-components ─────────────────────────────────────────────────────────
+const NAV_GROUPS = [
+  { label: '01 · Foundations', items: [
+    { id: 'brand',     label: 'Brand' },
+    { id: 'color',     label: 'Color' },
+    { id: 'gradients', label: 'Gradients' },
+    { id: 'type',      label: 'Type' },
+    { id: 'space',     label: 'Space & Radii' },
+    { id: 'shadows',   label: 'Shadows' },
+  ]},
+  { label: '02 · Voice', items: [
+    { id: 'voice', label: 'Tone & Copy' },
+  ]},
+  { label: '03 · Components', items: [
+    { id: 'buttons',  label: 'Buttons' },
+    { id: 'tags',     label: 'Tags & Icons' },
+    { id: 'cards',    label: 'Cards' },
+    { id: 'motion',   label: 'Motion' },
+  ]},
+]
 
-function DSSection({ id, title, children, isDark }) {
-  const muted = isDark ? 'rgba(245,242,238,0.4)' : 'rgba(10,10,10,0.4)'
-  const divider = isDark ? 'rgba(245,242,238,0.08)' : 'rgba(10,10,10,0.08)'
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function scrollTo(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+function SectionHeader({ num, title, titleRed, desc, isDark }) {
+  const fg = isDark ? '#F5F2EE' : '#0A0A0A'
+  const muted = isDark ? 'rgba(245,242,238,0.55)' : 'rgba(10,10,10,0.55)'
   return (
-    <section id={id} style={{ marginBottom: 80 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
-        <h2 style={{ margin: 0, fontFamily: 'ABCWhyte, sans-serif', fontSize: 11, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: muted }}>
-          {title}
+    <header style={{ display: 'grid', gridTemplateColumns: 'clamp(80px,16%,180px) 1fr', gap: 'clamp(16px,4%,48px)', marginBottom: 56, alignItems: 'end' }}>
+      <span style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#EF3537', paddingBottom: 8 }}>{num}</span>
+      <div>
+        <h2 style={{ margin: '0 0 16px', fontFamily: 'ABCWhyteInktrap, sans-serif', fontSize: 'clamp(36px,5vw,64px)', fontWeight: 700, lineHeight: 1.0, color: fg, letterSpacing: '-0.01em' }}>
+          {titleRed ? (
+            <>{title} <em style={{ fontStyle: 'normal', color: '#EF3537' }}>{titleRed}</em></>
+          ) : title}
         </h2>
-        <div style={{ flex: 1, height: 1, background: divider }} />
+        {desc && <p style={{ margin: 0, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 400, fontSize: 'clamp(15px,1.5vw,18px)', lineHeight: 1.45, color: muted, maxWidth: '56ch' }}>{desc}</p>}
       </div>
-      {children}
-    </section>
+    </header>
   )
 }
 
-function SubLabel({ children, isDark }) {
-  return (
-    <p style={{ margin: '0 0 14px', fontFamily: 'ABCWhyte, sans-serif', fontSize: 11, fontWeight: 500, color: isDark ? 'rgba(245,242,238,0.4)' : 'rgba(10,10,10,0.4)', letterSpacing: '0.06em' }}>
-      {children}
-    </p>
-  )
-}
-
-function ColorSwatch({ name, hex, label, isDark }) {
+function ColorSwatch({ token, hex, role, dark: textDark }) {
   const [copied, setCopied] = useState(false)
-
   function copy() {
     navigator.clipboard?.writeText(hex)
     setCopied(true)
-    setTimeout(() => setCopied(false), 1200)
+    setTimeout(() => setCopied(false), 1100)
   }
-
+  const textColor = textDark ? '#F5F2EE' : '#0A0A0A'
   return (
-    <div onClick={copy} title={`Copy ${hex}`} style={{ cursor: 'pointer' }}>
-      <div style={{
-        height: 60, borderRadius: 10,
-        background: hex,
-        border: `1px solid ${isDark ? 'rgba(245,242,238,0.08)' : 'rgba(10,10,10,0.08)'}`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        marginBottom: 8, overflow: 'hidden', position: 'relative',
-      }}>
-        <AnimatePresence>
-          {copied && (
-            <motion.div key="copied"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <span style={{ fontSize: 10, color: '#fff', fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600 }}>Copiado</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+    <div onClick={copy} title={`Copy ${hex}`} style={{ cursor: 'pointer', aspectRatio: '1/1.25', borderRadius: 14, padding: '14px 16px', background: hex, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 1px 4px rgba(0,0,0,0.1)', transition: 'transform 0.15s', position: 'relative', overflow: 'hidden' }}
+      onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-3px)'}
+      onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+    >
+      <span style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase', color: textColor, opacity: 0.85 }}>{token}</span>
+      <div>
+        <div style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 13, fontWeight: 500, color: textColor }}>{hex}</div>
+        <div style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em', color: textColor, opacity: 0.7, marginTop: 3 }}>{role}</div>
       </div>
-      <p style={{ margin: '0 0 2px', fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, color: isDark ? 'rgba(245,242,238,0.8)' : 'rgba(10,10,10,0.8)', lineHeight: 1.3 }}>
-        {name}{label ? <span style={{ opacity: 0.5, fontWeight: 400 }}> — {label}</span> : null}
-      </p>
-      <p style={{ margin: 0, fontSize: 9, fontFamily: 'ABCWhyteMono, monospace', color: isDark ? 'rgba(245,242,238,0.35)' : 'rgba(10,10,10,0.35)' }}>
-        {hex}
-      </p>
+      <AnimatePresence>
+        {copied && (
+          <motion.div key="c" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: '#fff', fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600 }}>Copiado</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
-function GradientCard({ name, css, isDark }) {
+function GradientCard({ token, label, context, css, isDark }) {
   const [copied, setCopied] = useState(false)
-
   function copy() {
     navigator.clipboard?.writeText(css)
     setCopied(true)
-    setTimeout(() => setCopied(false), 1200)
+    setTimeout(() => setCopied(false), 1100)
   }
-
   return (
-    <div onClick={copy} style={{ cursor: 'pointer' }}>
-      <div style={{
-        height: 80, borderRadius: 12, background: css,
-        border: `1px solid ${isDark ? 'rgba(245,242,238,0.08)' : 'rgba(10,10,10,0.08)'}`,
-        marginBottom: 8, display: 'flex', alignItems: 'flex-end', padding: '8px 12px',
-      }}>
-        {copied && <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.8)', fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600 }}>Copiado</span>}
+    <div onClick={copy} style={{ cursor: 'pointer', aspectRatio: '1/1.25', borderRadius: 16, background: css, padding: 16, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: '#F5F2EE', position: 'relative', overflow: 'hidden' }}>
+      <span style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.85 }}>{token}</span>
+      <div>
+        <div style={{ fontFamily: 'ABCWhyte, sans-serif', fontSize: 14, fontWeight: 500, lineHeight: 1.1 }}>{label}</div>
+        <div style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.8, marginTop: 4 }}>{context}</div>
       </div>
-      <p style={{ margin: 0, fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, color: isDark ? 'rgba(245,242,238,0.75)' : 'rgba(10,10,10,0.75)' }}>{name}</p>
+      <AnimatePresence>
+        {copied && (
+          <motion.div key="c" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: '#fff', fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600 }}>CSS copiado</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
 function EasingDemo({ name, fm, css, desc, isDark, cardBg, border, text }) {
-  const [playing, setPlaying] = useState(false)
   const [key, setKey] = useState(0)
-
-  function play() {
-    setPlaying(false)
-    setKey(k => k + 1)
-    setTimeout(() => setPlaying(true), 16)
-    setTimeout(() => setPlaying(false), 1400)
-  }
-
+  const [playing, setPlaying] = useState(false)
+  function play() { setKey(k => k + 1); setTimeout(() => setPlaying(true), 16); setTimeout(() => setPlaying(false), 1400) }
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'clamp(100px,20%,160px) 1fr clamp(140px,30%,240px)',
-      alignItems: 'center', gap: 16,
-      padding: '14px 20px', borderRadius: 10,
-      background: cardBg, border: `1px solid ${border}`,
-      marginBottom: 2,
-    }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'clamp(90px,18%,150px) 1fr clamp(120px,28%,220px)', alignItems: 'center', gap: 16, padding: '13px 18px', borderRadius: 10, background: cardBg, border: `1px solid ${border}`, marginBottom: 2 }}>
       <div>
-        <p style={{ margin: '0 0 2px', fontSize: 12, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, color: text }}>{name}</p>
-        <p style={{ margin: 0, fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', color: isDark ? 'rgba(245,242,238,0.4)' : 'rgba(10,10,10,0.4)' }}>{desc}</p>
+        <div style={{ fontSize: 12, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, color: text }}>{name}</div>
+        <div style={{ fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', color: isDark ? 'rgba(245,242,238,0.4)' : 'rgba(10,10,10,0.4)', marginTop: 2 }}>{desc}</div>
       </div>
-      <div
-        key={key}
-        onClick={play}
-        title="Click to preview"
-        style={{ height: 28, borderRadius: 4, background: isDark ? '#1A1A1A' : '#F0EEEB', position: 'relative', cursor: 'pointer', overflow: 'hidden' }}
-      >
-        <motion.div
-          animate={playing ? { x: ['4px', 'calc(100% - 28px)'] } : { x: '4px' }}
-          transition={{ duration: 0.8, ease: fm }}
-          style={{ position: 'absolute', top: 4, width: 20, height: 20, borderRadius: 4, background: '#EF3537' }}
-        />
+      <div key={key} onClick={play} title="Click to preview" style={{ height: 28, borderRadius: 4, background: isDark ? '#1A1A1A' : '#ECEAE6', position: 'relative', cursor: 'pointer', overflow: 'hidden' }}>
+        <motion.div animate={playing ? { x: ['4px','calc(100% - 28px)'] } : { x: '4px' }} transition={{ duration: 0.8, ease: fm }}
+          style={{ position: 'absolute', top: 4, width: 20, height: 20, borderRadius: 4, background: '#EF3537' }} />
       </div>
-      <p style={{ margin: 0, fontSize: 9, fontFamily: 'ABCWhyteMono, monospace', color: isDark ? 'rgba(245,242,238,0.3)' : 'rgba(10,10,10,0.3)', wordBreak: 'break-all', lineHeight: 1.5 }}>{css}</p>
-    </div>
-  )
-}
-
-function ComponentGroup({ title, children, isDark, cardBg, border }) {
-  return (
-    <div style={{ marginBottom: 32 }}>
-      <SubLabel isDark={isDark}>{title}</SubLabel>
-      <div style={{ padding: '24px', borderRadius: 12, background: cardBg, border: `1px solid ${border}` }}>
-        {children}
-      </div>
+      <div style={{ fontSize: 9, fontFamily: 'ABCWhyteMono, monospace', color: isDark ? 'rgba(245,242,238,0.3)' : 'rgba(10,10,10,0.3)', wordBreak: 'break-all', lineHeight: 1.5 }}>{css}</div>
     </div>
   )
 }
@@ -271,87 +254,86 @@ function PasswordGate({ onUnlock }) {
   function handleSubmit(e) {
     e.preventDefault()
     if (value === '030790') { onUnlock(); return }
-    setError(true)
-    setValue('')
-    setTimeout(() => setError(false), 700)
+    setError(true); setValue(''); setTimeout(() => setError(false), 700)
   }
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: bg, padding: 24, transition: 'background 0.4s' }}>
-      <motion.form
-        onSubmit={handleSubmit}
-        animate={error ? { x: [-10, 10, -8, 8, -4, 4, 0] } : {}}
+      <motion.form onSubmit={handleSubmit}
+        animate={error ? { x: [-10,10,-8,8,-4,4,0] } : {}}
         transition={{ duration: 0.5 }}
-        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, width: '100%', maxWidth: 320 }}
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, width: '100%', maxWidth: 300 }}
       >
-        <div style={{
-          width: 52, height: 52, borderRadius: '50%',
-          background: cardBg,
-          border: `1px solid ${border}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.07)',
-        }}>
+        <div style={{ width: 52, height: 52, borderRadius: '50%', background: cardBg, border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.07)' }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <rect x="4" y="11" width="16" height="11" rx="3" fill={text} opacity="0.85" />
-            <path d="M8 11V7a4 4 0 018 0v4" stroke={text} strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.85" />
-            <circle cx="12" cy="16.5" r="1.5" fill={bg} />
+            <rect x="4" y="11" width="16" height="11" rx="3" fill={text} opacity="0.85"/>
+            <path d="M8 11V7a4 4 0 018 0v4" stroke={text} strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.85"/>
+            <circle cx="12" cy="16.5" r="1.5" fill={bg}/>
           </svg>
         </div>
-
         <div style={{ textAlign: 'center' }}>
-          <p style={{ margin: '0 0 6px', fontFamily: 'ABCWhyte, sans-serif', fontSize: 10, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: isDark ? 'rgba(245,242,238,0.32)' : 'rgba(10,10,10,0.32)' }}>
-            David Hulle
-          </p>
-          <h1 style={{ margin: 0, fontFamily: 'ABCWhyteInktrap, sans-serif', fontSize: 22, fontWeight: 700, color: text, lineHeight: 1.2 }}>
-            Design System
-          </h1>
+          <p style={{ margin: '0 0 6px', fontFamily: 'ABCWhyteMono, monospace', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: isDark ? 'rgba(245,242,238,0.32)' : 'rgba(10,10,10,0.32)' }}>David Hulle</p>
+          <h1 style={{ margin: 0, fontFamily: 'ABCWhyteInktrap, sans-serif', fontSize: 22, fontWeight: 700, color: text, lineHeight: 1.2 }}>Design System</h1>
         </div>
-
-        <input
-          type="password"
-          placeholder="Senha de acesso"
-          value={value}
-          onChange={e => setValue(e.target.value)}
-          autoFocus
-          style={{
-            width: '100%', boxSizing: 'border-box',
-            padding: '13px 16px',
-            fontSize: 14, fontFamily: 'ABCWhyteMono, monospace',
-            letterSpacing: '0.1em', textAlign: 'center',
-            background: cardBg, color: text,
-            border: `1.5px solid ${error ? '#EF3537' : border}`,
-            borderRadius: 12, outline: 'none',
-            transition: 'border-color 0.2s',
-          }}
+        <input type="password" placeholder="Senha de acesso" value={value} onChange={e => setValue(e.target.value)} autoFocus
+          style={{ width: '100%', boxSizing: 'border-box', padding: '13px 16px', fontSize: 14, fontFamily: 'ABCWhyteMono, monospace', letterSpacing: '0.1em', textAlign: 'center', background: cardBg, color: text, border: `1.5px solid ${error ? '#EF3537' : border}`, borderRadius: 10, outline: 'none', transition: 'border-color 0.2s' }}
         />
-
-        <motion.button
-          type="submit"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-          style={{
-            width: '100%', padding: '13px 16px',
-            fontSize: 13, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600,
-            letterSpacing: '0.04em',
-            background: '#EF3537', color: '#FFFFFF',
-            border: 'none', borderRadius: 12, cursor: 'pointer',
-          }}
-        >
+        <motion.button type="submit" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+          style={{ width: '100%', padding: '13px 16px', fontSize: 12, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', background: '#EF3537', color: '#FFFFFF', border: 'none', borderRadius: 10, cursor: 'pointer' }}>
           Entrar
         </motion.button>
-
         <AnimatePresence>
-          {error && (
-            <motion.p key="err"
-              initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              style={{ margin: 0, color: '#EF3537', fontFamily: 'ABCWhyte, sans-serif', fontSize: 12 }}
-            >
-              Senha incorreta
-            </motion.p>
-          )}
+          {error && <motion.p key="e" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ margin: 0, color: '#EF3537', fontFamily: 'ABCWhyte, sans-serif', fontSize: 12 }}>Senha incorreta</motion.p>}
         </AnimatePresence>
       </motion.form>
     </div>
+  )
+}
+
+// ─── Sidebar ─────────────────────────────────────────────────────────────────
+
+function Sidebar({ isDark }) {
+  const bg = isDark ? '#0F0F0F' : '#F0EDE9'
+  const border = isDark ? 'rgba(245,242,238,0.08)' : 'rgba(10,10,10,0.08)'
+  const text = isDark ? '#F5F2EE' : '#0A0A0A'
+  const muted = isDark ? 'rgba(245,242,238,0.35)' : 'rgba(10,10,10,0.35)'
+  const hover = isDark ? 'rgba(245,242,238,0.06)' : 'rgba(10,10,10,0.04)'
+
+  return (
+    <aside style={{ position: 'sticky', top: 0, height: '100vh', overflowY: 'auto', background: bg, borderRight: `1px solid ${border}`, padding: '28px 20px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* Brand */}
+      <a href="#hero" onClick={e => { e.preventDefault(); scrollTo('hero') }} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+        <img src="/logos/logo-simbolo.svg" alt="DH" width={24} height={28} style={{ filter: isDark ? 'brightness(0) invert(1)' : 'none', flexShrink: 0 }} />
+        <div>
+          <div style={{ fontFamily: 'ABCWhyte, sans-serif', fontWeight: 800, fontSize: 13, letterSpacing: '-0.01em', lineHeight: 1.1, color: text }}>DH Design System</div>
+          <div style={{ fontFamily: 'ABCWhyteMono, monospace', fontWeight: 400, fontSize: 8, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.5, marginTop: 2, color: text }}>v2 · May 2026</div>
+        </div>
+      </a>
+
+      {/* Nav groups */}
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: 20, fontFamily: 'ABCWhyteMono, monospace' }}>
+        {NAV_GROUPS.map(g => (
+          <div key={g.label} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#EF3537', padding: '0 8px 4px' }}>{g.label}</span>
+            {g.items.map(item => (
+              <a key={item.id} href={`#${item.id}`}
+                onClick={e => { e.preventDefault(); scrollTo(item.id) }}
+                style={{ padding: '6px 8px', borderRadius: 6, fontSize: 12, color: text, textDecoration: 'none', transition: 'all 0.15s', display: 'block' }}
+                onMouseEnter={e => { e.currentTarget.style.background = hover; e.currentTarget.style.color = '#EF3537' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = text }}
+              >{item.label}</a>
+            ))}
+          </div>
+        ))}
+      </nav>
+
+      {/* Meta */}
+      <div style={{ marginTop: 'auto', fontFamily: 'ABCWhyteMono, monospace', fontSize: 10, lineHeight: 1.7, color: muted }}>
+        <span style={{ color: text, fontWeight: 500, fontFamily: 'ABCWhyte, sans-serif' }}>David Hulle</span><br />
+        Product Design Leader<br />
+        <span style={{ opacity: 0.6 }}>davidhulle.com</span>
+      </div>
+    </aside>
   )
 }
 
@@ -359,512 +341,380 @@ function PasswordGate({ onUnlock }) {
 
 function DesignSystemContent() {
   const { isDark } = useTheme()
+  const [isMobile, setIsMobile] = useState(false)
+  const [toggleOn, setToggleOn] = useState(false)
+  const [radioVal, setRadioVal] = useState('a')
+  const [inputVal, setInputVal] = useState('')
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
   const bg     = isDark ? '#0A0A0A' : '#F5F2EE'
   const text   = isDark ? '#F5F2EE' : '#0A0A0A'
   const cardBg = isDark ? '#141414' : '#FFFFFF'
-  const border = isDark ? 'rgba(245,242,238,0.1)' : 'rgba(10,10,10,0.1)'
-  const muted  = isDark ? 'rgba(245,242,238,0.5)' : 'rgba(10,10,10,0.5)'
-
-  const [toggleOn, setToggleOn] = useState(false)
-  const [inputVal, setInputVal] = useState('')
-  const [radioVal, setRadioVal] = useState('a')
+  const secBg  = isDark ? '#0F0F0F' : '#F0EDE9'
+  const border = isDark ? 'rgba(245,242,238,0.09)' : 'rgba(10,10,10,0.09)'
+  const muted  = isDark ? 'rgba(245,242,238,0.5)'  : 'rgba(10,10,10,0.5)'
+  const pad    = 'clamp(32px,6vw,80px)'
 
   return (
     <div style={{ minHeight: '100vh', background: bg, color: text, transition: 'background-color 0.4s ease, color 0.4s ease' }}>
 
-      {/* ── Sticky top bar ── */}
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 100,
-        background: isDark ? 'rgba(10,10,10,0.88)' : 'rgba(245,242,238,0.88)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: `1px solid ${border}`,
-        padding: '0 clamp(24px,6vw,80px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        height: 54,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontFamily: 'ABCWhyteInktrap, sans-serif', fontWeight: 700, fontSize: 15, color: text }}>Design System</span>
-          <span style={{ fontSize: 9, fontFamily: 'ABCWhyteMono, monospace', padding: '2px 8px', borderRadius: 100, background: 'rgba(239,53,55,0.12)', color: '#EF3537' }}>v1.0</span>
-        </div>
-        <span style={{ fontFamily: 'ABCWhyte, sans-serif', fontSize: 11, color: isDark ? 'rgba(245,242,238,0.3)' : 'rgba(10,10,10,0.3)' }}>
-          davidhulle.com · 2026
-        </span>
-      </div>
+      {/* Grid: sidebar + main (desktop only) */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '240px 1fr', minHeight: '100vh' }}>
 
-      {/* ── Main content ── */}
-      <div style={{ maxWidth: 1120, margin: '0 auto', padding: 'clamp(48px,8vw,96px) clamp(24px,6vw,80px)' }}>
+        {!isMobile && <Sidebar isDark={isDark} />}
 
-        {/* Page heading */}
-        <div style={{ marginBottom: 80 }}>
-          <p style={{ margin: '0 0 12px', fontFamily: 'ABCWhyte, sans-serif', fontSize: 11, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: isDark ? 'rgba(245,242,238,0.35)' : 'rgba(10,10,10,0.35)' }}>
-            David Hulle
-          </p>
-          <h1 style={{ margin: '0 0 16px', fontFamily: 'Network, cursive', fontSize: 'clamp(40px, 8vw, 72px)', fontWeight: 400, color: text, lineHeight: 1 }}>
-            Design System
-          </h1>
-          <p style={{ margin: 0, fontFamily: 'Inter, sans-serif', fontSize: 15, lineHeight: 1.7, color: muted, maxWidth: 520 }}>
-            Tokens de design, componentes e padrões visuais do portfolio. Clique nos swatches de cor para copiar o valor hex.
-          </p>
-        </div>
+        <main id="hero">
 
-        {/* ════ COLORS ════ */}
-        <DSSection id="colors" title="Colors" isDark={isDark}>
-
-          <SubLabel isDark={isDark}>Brand — Red Scale</SubLabel>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 12, marginBottom: 40 }}>
-            {BRAND_REDS.map(c => <ColorSwatch key={c.hex} {...c} isDark={isDark} />)}
-          </div>
-
-          <SubLabel isDark={isDark}>Neutrals</SubLabel>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 12, marginBottom: 40 }}>
-            {NEUTRALS.map(c => <ColorSwatch key={c.hex} {...c} isDark={isDark} />)}
-          </div>
-
-          <SubLabel isDark={isDark}>Semantic & Complementary</SubLabel>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 12, marginBottom: 40 }}>
-            {SEMANTIC.map(c => <ColorSwatch key={c.hex} {...c} isDark={isDark} />)}
-          </div>
-
-          <SubLabel isDark={isDark}>Gradients — clique para copiar</SubLabel>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 16 }}>
-            {GRADIENTS.map(g => <GradientCard key={g.name} {...g} isDark={isDark} />)}
-          </div>
-        </DSSection>
-
-        {/* ════ TYPOGRAPHY ════ */}
-        <DSSection id="typography" title="Typography" isDark={isDark}>
-
-          <SubLabel isDark={isDark}>Font Families</SubLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 40 }}>
-            {FONT_FAMILIES.map(f => (
-              <div key={f.name} style={{
-                display: 'grid',
-                gridTemplateColumns: 'clamp(80px,18%,140px) 1fr auto',
-                alignItems: 'center', gap: 20,
-                padding: '16px 20px', borderRadius: 10,
-                background: cardBg, border: `1px solid ${border}`,
-              }}>
-                <div>
-                  <p style={{ margin: '0 0 2px', fontSize: 9, fontFamily: 'ABCWhyteMono, monospace', color: muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{f.role}</p>
-                  <p style={{ margin: 0, fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, color: text }}>{f.name}</p>
-                </div>
-                <p style={{ margin: 0, fontSize: 20, fontFamily: f.var, color: text, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{f.sample}</p>
-                <p style={{ margin: 0, fontSize: 9, fontFamily: 'ABCWhyteMono, monospace', color: isDark ? 'rgba(245,242,238,0.25)' : 'rgba(10,10,10,0.25)', whiteSpace: 'nowrap' }}>{f.var.split(',')[0]}</p>
-              </div>
-            ))}
-          </div>
-
-          <SubLabel isDark={isDark}>Type Scale — ABCWhyte</SubLabel>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {TYPE_SCALE.map(t => (
-              <div key={t.name} style={{
-                display: 'grid', gridTemplateColumns: '48px 48px 1fr',
-                alignItems: 'baseline', gap: 16,
-                padding: '10px 0',
-                borderBottom: `1px solid ${border}`,
-              }}>
-                <span style={{ fontSize: 10, fontFamily: 'ABCWhyteMono, monospace', color: isDark ? 'rgba(245,242,238,0.3)' : 'rgba(10,10,10,0.3)' }}>{t.name}</span>
-                <span style={{ fontSize: 10, fontFamily: 'ABCWhyteMono, monospace', color: isDark ? 'rgba(245,242,238,0.3)' : 'rgba(10,10,10,0.3)' }}>{t.size}</span>
-                <span style={{ fontSize: t.size, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 400, color: text, lineHeight: t.lh, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-                  The quick brown fox jumps over the lazy dog
-                </span>
-              </div>
-            ))}
-          </div>
-        </DSSection>
-
-        {/* ════ SPACING ════ */}
-        <DSSection id="spacing" title="Spacing" isDark={isDark}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 32, alignItems: 'flex-end' }}>
-            {SPACING.map(s => {
-              const visual = Math.min(s, 80)
-              return (
-                <div key={s} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: visual, height: visual, background: '#EF3537', borderRadius: 3, opacity: 0.75 }} />
-                  <span style={{ fontSize: 9, fontFamily: 'ABCWhyteMono, monospace', color: muted }}>{s}px</span>
-                </div>
-              )
-            })}
-          </div>
-        </DSSection>
-
-        {/* ════ BORDER RADIUS ════ */}
-        <DSSection id="radius" title="Border Radius" isDark={isDark}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'flex-end' }}>
-            {RADII.map(r => (
-              <div key={r.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                <div style={{
-                  width: 64, height: 64,
-                  background: isDark ? '#1E1E1E' : '#E5E5E5',
-                  borderRadius: r.value,
-                  border: `2px solid ${isDark ? 'rgba(245,242,238,0.12)' : 'rgba(10,10,10,0.12)'}`,
-                }} />
-                <div style={{ textAlign: 'center' }}>
-                  <p style={{ margin: '0 0 2px', fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, color: text }}>{r.name}</p>
-                  <p style={{ margin: 0, fontSize: 9, fontFamily: 'ABCWhyteMono, monospace', color: muted }}>{r.value}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </DSSection>
-
-        {/* ════ SHADOWS ════ */}
-        <DSSection id="shadows" title="Shadows" isDark={isDark}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 24 }}>
-            {SHADOWS.map(s => (
-              <div key={s.name}>
-                <div style={{
-                  height: 80, borderRadius: 12,
-                  background: cardBg,
-                  boxShadow: isDark ? s.dark : s.light,
-                  marginBottom: 12,
-                }} />
-                <p style={{ margin: '0 0 3px', fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, color: text }}>shadow-{s.name}</p>
-                <p style={{ margin: 0, fontSize: 9, fontFamily: 'ABCWhyteMono, monospace', color: muted, wordBreak: 'break-word', lineHeight: 1.5 }}>{isDark ? s.dark : s.light}</p>
-              </div>
-            ))}
-          </div>
-        </DSSection>
-
-        {/* ════ MOTION ════ */}
-        <DSSection id="motion" title="Motion" isDark={isDark}>
-          <SubLabel isDark={isDark}>Easing Functions — clique para animar</SubLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 40 }}>
-            {EASINGS.map(e => (
-              <EasingDemo key={e.name} {...e} isDark={isDark} cardBg={cardBg} border={border} text={text} />
-            ))}
-          </div>
-
-          <SubLabel isDark={isDark}>Duration Scale</SubLabel>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12 }}>
-            {DURATIONS.map(d => (
-              <div key={d.name} style={{ padding: '16px 18px', borderRadius: 10, background: cardBg, border: `1px solid ${border}` }}>
-                <p style={{ margin: '0 0 4px', fontSize: 28, fontFamily: 'ABCWhyteInktrap, sans-serif', fontWeight: 700, color: '#EF3537', lineHeight: 1 }}>{d.value}</p>
-                <p style={{ margin: '0 0 2px', fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, color: text }}>{d.name}</p>
-                <p style={{ margin: 0, fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', color: muted }}>{d.desc}</p>
-              </div>
-            ))}
-          </div>
-        </DSSection>
-
-        {/* ════ COMPONENTS ════ */}
-        <DSSection id="components" title="Components" isDark={isDark}>
-
-          {/* Buttons */}
-          <ComponentGroup title="Buttons — Variants" isDark={isDark} cardBg={cardBg} border={border}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
-              <button style={{ padding: '11px 22px', fontSize: 13, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, background: '#EF3537', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Primary</button>
-              <button style={{ padding: '11px 22px', fontSize: 13, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, background: 'transparent', color: text, border: `1.5px solid ${isDark ? 'rgba(245,242,238,0.2)' : 'rgba(10,10,10,0.2)'}`, borderRadius: 8, cursor: 'pointer' }}>Secondary</button>
-              <button style={{ padding: '11px 22px', fontSize: 13, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, background: 'transparent', color: '#EF3537', border: '1.5px solid #EF3537', borderRadius: 8, cursor: 'pointer' }}>Ghost</button>
-              <button style={{ padding: '11px 22px', fontSize: 13, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, background: isDark ? '#F5F2EE' : '#0A0A0A', color: isDark ? '#0A0A0A' : '#F5F2EE', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Inverted</button>
-              <button style={{ padding: '11px 20px', fontSize: 13, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, background: 'linear-gradient(135deg, #9E0015, #EF3537)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Gradient</button>
-              <button disabled style={{ padding: '11px 22px', fontSize: 13, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, background: isDark ? '#1E1E1E' : '#E5E5E5', color: isDark ? 'rgba(245,242,238,0.25)' : 'rgba(10,10,10,0.25)', border: 'none', borderRadius: 8, cursor: 'not-allowed' }}>Disabled</button>
+          {/* ── HERO ── */}
+          <section style={{ position: 'relative', minHeight: '70vh', padding: `80px ${pad} 64px`, background: secBg, borderBottom: `1px solid ${border}`, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'hidden' }}>
+            {/* Kicker */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'ABCWhyteMono, monospace', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#EF3537' }}>
+              <span style={{ width: 36, height: 1, background: '#EF3537', display: 'inline-block', flexShrink: 0 }} />
+              DH Design System · v2 · aligned to production
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginTop: 16, paddingTop: 16, borderTop: `1px solid ${border}` }}>
-              <span style={{ fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', color: muted, marginRight: 4 }}>Sizes:</span>
-              <button style={{ padding: '7px 14px', fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, background: '#EF3537', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Small</button>
-              <button style={{ padding: '11px 22px', fontSize: 13, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, background: '#EF3537', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Medium</button>
-              <button style={{ padding: '14px 28px', fontSize: 15, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, background: '#EF3537', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer' }}>Large</button>
-              <button style={{ padding: '18px 40px', fontSize: 16, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, background: '#EF3537', color: '#fff', border: 'none', borderRadius: 12, cursor: 'pointer' }}>XLarge</button>
+            {/* Display */}
+            <div style={{ margin: '28px 0 0' }}>
+              <h1 style={{ margin: 0, fontFamily: 'Network, cursive', fontSize: 'clamp(64px,11vw,180px)', lineHeight: 0.86, color: text, letterSpacing: '-0.02em' }}>
+                A bold <em style={{ fontStyle: 'normal', color: '#EF3537' }}>signature</em>,<br />built to scale.
+              </h1>
+              <p style={{ margin: '28px 0 0', fontFamily: 'ABCWhyte, sans-serif', fontWeight: 400, fontSize: 'clamp(16px,1.8vw,22px)', lineHeight: 1.3, maxWidth: '52ch', color: text }}>
+                A linguagem visual e de conteúdo por trás de{' '}
+                <a href="https://davidhulle.com" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline', textDecorationColor: '#EF3537', textUnderlineOffset: 4 }}>davidhulle.com</a>
+                {' '}— fundamentos, componentes e regras para criar interfaces e materiais sempre on-brand, em qualquer canal.
+              </p>
             </div>
-          </ComponentGroup>
-
-          {/* Tags & Badges */}
-          <ComponentGroup title="Tags & Badges" isDark={isDark} cardBg={cardBg} border={border}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-              <span style={{ padding: '4px 12px', fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 500, background: 'rgba(239,53,55,0.12)', color: '#EF3537', borderRadius: 100 }}>Brand</span>
-              <span style={{ padding: '4px 12px', fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 500, background: 'transparent', color: text, border: `1px solid ${border}`, borderRadius: 100 }}>Outline</span>
-              <span style={{ padding: '4px 12px', fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 500, background: isDark ? '#1E1E1E' : '#F0EEEB', color: text, borderRadius: 100 }}>Neutral</span>
-              <span style={{ padding: '4px 12px', fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 500, background: 'rgba(34,197,94,0.12)', color: '#16A34A', borderRadius: 100 }}>Success</span>
-              <span style={{ padding: '4px 12px', fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 500, background: 'rgba(245,158,11,0.12)', color: '#D97706', borderRadius: 100 }}>Warning</span>
-              <span style={{ padding: '4px 12px', fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 500, background: 'rgba(59,130,246,0.12)', color: '#2563EB', borderRadius: 100 }}>Info</span>
-              <span style={{ padding: '3px 10px', fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, background: '#0A0A0A', color: '#F5F2EE', borderRadius: 6 }}>Dark pill</span>
-              <span style={{ padding: '3px 10px', fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, background: 'linear-gradient(135deg,#9E0015,#EF3537)', color: '#fff', borderRadius: 100 }}>Gradient</span>
-              <span style={{ padding: '2px 8px', fontSize: 10, fontFamily: 'ABCWhyteMono, monospace', background: isDark ? '#1A1A1A' : '#F4F4F4', color: text, borderRadius: 4, border: `1px solid ${border}` }}>code</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 100, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.2)' }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#16A34A' }} />
-                <span style={{ fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, color: '#16A34A' }}>Live</span>
-              </div>
-            </div>
-          </ComponentGroup>
-
-          {/* Cards */}
-          <ComponentGroup title="Cards" isDark={isDark} cardBg={cardBg} border={border}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
-              {/* Default */}
-              <div style={{ padding: 24, borderRadius: 16, background: isDark ? '#1A1A1A' : '#FAFAFA', border: `1px solid ${border}`, boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.06)' }}>
-                <span style={{ display: 'block', marginBottom: 8, fontSize: 9, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#EF3537' }}>Default</span>
-                <h3 style={{ margin: '0 0 8px', fontFamily: 'ABCWhyteInktrap, sans-serif', fontSize: 17, fontWeight: 700, color: text }}>Card Title</h3>
-                <p style={{ margin: 0, fontFamily: 'Inter, sans-serif', fontSize: 13, lineHeight: 1.6, color: muted }}>A description that provides context about this card's content.</p>
-              </div>
-              {/* Glass */}
-              <div style={{ padding: 24, borderRadius: 16, background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.65)', backdropFilter: 'blur(20px)', border: `1px solid ${border}` }}>
-                <span style={{ display: 'block', marginBottom: 8, fontSize: 9, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: muted }}>Glass</span>
-                <h3 style={{ margin: '0 0 8px', fontFamily: 'ABCWhyteInktrap, sans-serif', fontSize: 17, fontWeight: 700, color: text }}>Glassmorphism</h3>
-                <p style={{ margin: 0, fontFamily: 'Inter, sans-serif', fontSize: 13, lineHeight: 1.6, color: muted }}>Blur, transparency and depth.</p>
-              </div>
-              {/* Brand */}
-              <div style={{ padding: 24, borderRadius: 16, background: 'linear-gradient(135deg, #9E0015 0%, #EF3537 100%)' }}>
-                <span style={{ display: 'block', marginBottom: 8, fontSize: 9, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' }}>Brand</span>
-                <h3 style={{ margin: '0 0 8px', fontFamily: 'ABCWhyteInktrap, sans-serif', fontSize: 17, fontWeight: 700, color: '#fff' }}>Gradient Card</h3>
-                <p style={{ margin: 0, fontFamily: 'Inter, sans-serif', fontSize: 13, lineHeight: 1.6, color: 'rgba(255,255,255,0.78)' }}>High-emphasis surface for CTAs.</p>
-              </div>
-              {/* Metric */}
-              <div style={{ padding: 24, borderRadius: 16, background: isDark ? '#1A1A1A' : '#FAFAFA', border: `1px solid ${border}` }}>
-                <p style={{ margin: '0 0 2px', fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 500, color: muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Metric</p>
-                <p style={{ margin: '0 0 4px', fontSize: 48, fontFamily: 'ABCWhyteInktrap, sans-serif', fontWeight: 700, color: '#EF3537', lineHeight: 1 }}>79%</p>
-                <p style={{ margin: 0, fontSize: 13, fontFamily: 'Inter, sans-serif', color: muted }}>Conversion rate increase</p>
-              </div>
-            </div>
-          </ComponentGroup>
-
-          {/* Inputs */}
-          <ComponentGroup title="Form Inputs" isDark={isDark} cardBg={cardBg} border={border}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 20 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, color: muted, marginBottom: 6, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Default</label>
-                <input type="text" placeholder="Placeholder" value={inputVal} onChange={e => setInputVal(e.target.value)}
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', fontSize: 14, fontFamily: 'Inter, sans-serif', background: bg, color: text, border: `1.5px solid ${border}`, borderRadius: 10, outline: 'none' }} />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, color: '#EF3537', marginBottom: 6, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Error</label>
-                <input type="text" defaultValue="Valor inválido" readOnly
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', fontSize: 14, fontFamily: 'Inter, sans-serif', background: isDark ? '#1a0808' : '#FFF0F0', color: '#EF3537', border: '1.5px solid #EF3537', borderRadius: 10, outline: 'none' }} />
-                <p style={{ margin: '4px 0 0', fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', color: '#EF3537' }}>Este campo é obrigatório</p>
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, color: isDark ? 'rgba(245,242,238,0.25)' : 'rgba(10,10,10,0.25)', marginBottom: 6, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Disabled</label>
-                <input type="text" defaultValue="Não editável" disabled
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', fontSize: 14, fontFamily: 'Inter, sans-serif', background: isDark ? '#111' : '#F0EEEB', color: isDark ? 'rgba(245,242,238,0.2)' : 'rgba(10,10,10,0.2)', border: `1.5px solid ${isDark ? 'rgba(245,242,238,0.05)' : 'rgba(10,10,10,0.07)'}`, borderRadius: 10, outline: 'none', cursor: 'not-allowed' }} />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, color: muted, marginBottom: 6, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Select</label>
-                <select style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', fontSize: 14, fontFamily: 'Inter, sans-serif', background: bg, color: text, border: `1.5px solid ${border}`, borderRadius: 10, outline: 'none', cursor: 'pointer' }}>
-                  <option>Opção 1</option>
-                  <option>Opção 2</option>
-                  <option>Opção 3</option>
-                </select>
-              </div>
-            </div>
-          </ComponentGroup>
-
-          {/* Toggle & Checkbox */}
-          <ComponentGroup title="Toggle & Checkbox" isDark={isDark} cardBg={cardBg} border={border}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 32, alignItems: 'center' }}>
-              {/* Toggle */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <motion.div
-                  onClick={() => setToggleOn(p => !p)}
-                  style={{ width: 44, height: 24, borderRadius: 12, cursor: 'pointer', background: toggleOn ? '#EF3537' : (isDark ? '#333' : '#D4D4D4'), display: 'flex', alignItems: 'center', padding: '0 3px', transition: 'background 0.2s' }}
-                >
-                  <motion.div
-                    animate={{ x: toggleOn ? 20 : 0 }}
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }}
-                  />
-                </motion.div>
-                <span style={{ fontSize: 13, fontFamily: 'ABCWhyte, sans-serif', color: text }}>{toggleOn ? 'Ativo' : 'Inativo'}</span>
-              </div>
-              {/* Checkboxes */}
-              {[true, false].map((checked, i) => (
-                <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                  <div style={{
-                    width: 18, height: 18, borderRadius: 4,
-                    background: checked ? '#EF3537' : 'transparent',
-                    border: `2px solid ${checked ? '#EF3537' : border}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0,
-                  }}>
-                    {checked && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                  </div>
-                  <span style={{ fontSize: 13, fontFamily: 'ABCWhyte, sans-serif', color: text }}>{checked ? 'Marcado' : 'Desmarcado'}</span>
-                </label>
+            {/* Metabar */}
+            <dl style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 24, marginTop: 80, paddingTop: 28, borderTop: `1px solid ${border}`, fontFamily: 'ABCWhyteMono, monospace', fontSize: 11 }}>
+              {[['Brand','David Hulle'],['Lang','PT-BR · EN · ES'],['Surfaces','Web · Print · Slides'],['Source','davidhulle/portfolio']].map(([k,v]) => (
+                <div key={k}><dt style={{ color: muted, textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 9, marginBottom: 6 }}>{k}</dt><dd style={{ margin: 0, color: text, fontWeight: 500 }}>{v}</dd></div>
               ))}
-              {/* Radio */}
-              {['Opção A', 'Opção B'].map((opt, i) => {
-                const val = i === 0 ? 'a' : 'b'
-                const active = radioVal === val
-                return (
-                  <label key={opt} onClick={() => setRadioVal(val)} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                    <div style={{
-                      width: 18, height: 18, borderRadius: '50%',
-                      border: `2px solid ${active ? '#EF3537' : border}`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    }}>
-                      {active && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#EF3537' }} />}
+            </dl>
+          </section>
+
+          {/* ── BRAND ── */}
+          <section data-section id="brand" style={{ padding: `80px ${pad}`, borderBottom: `1px solid ${border}` }}>
+            <SectionHeader num="01.1 · Brand" title="Marca," titleRed="aplicada." desc="A marca é monograma + sobrenome. Quatro lockups cobrem todos os casos — sempre em preto, cream ou vermelho. Nunca recolorida fora dessa paleta." isDark={isDark} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
+              {[
+                { file: 'logo-horizontal', bg: secBg,    filter: 'none',                           label: 'Horizontal · Light' },
+                { file: 'logo-vertical',   bg: '#0A0A0A', filter: 'brightness(0) invert(1)',        label: 'Vertical · Dark'   },
+                { file: 'logo-simbolo',    bg: '#9E0015', filter: 'brightness(0) invert(1)',        label: 'Símbolo · Red'     },
+                { file: 'logo-sobrenome',  bg: '#0A0A0A', filter: 'brightness(0) invert(1)',        label: 'Sobrenome · Dark'  },
+              ].map(l => (
+                <div key={l.file}>
+                  <div style={{ aspectRatio: '1.6/1', borderRadius: 14, background: l.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, marginBottom: 8 }}>
+                    <img src={`/logos/${l.file}.svg`} alt={l.label} style={{ maxWidth: '80%', maxHeight: 56, display: 'block', filter: l.filter }} />
+                  </div>
+                  <div style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.12em', color: muted, textAlign: 'center' }}>{l.label}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ── COLOR ── */}
+          <section data-section id="color" style={{ padding: `80px ${pad}`, borderBottom: `1px solid ${border}` }}>
+            <SectionHeader num="01.2 · Color" title="Vermelho" titleRed="+ cream." desc="A paleta vive entre o vermelho-assinatura e o cream quente. Os neutros suportam, o vermelho dirige. Use a escala de 6 reds para criar profundidade sem diluir a marca." isDark={isDark} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12, marginBottom: 14 }}>
+              {BRAND_REDS.map(c => <ColorSwatch key={c.token} {...c} />)}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12 }}>
+              {NEUTRALS.map(c => <ColorSwatch key={c.token} {...c} />)}
+            </div>
+          </section>
+
+          {/* ── GRADIENTS ── */}
+          <section data-section id="gradients" style={{ padding: `80px ${pad}`, borderBottom: `1px solid ${border}` }}>
+            <SectionHeader num="01.3 · Gradients" title="Calor" titleRed="em camadas." desc="Quatro gradientes calibrados a partir da referência degrade.png. Use o sunset para grandes superfícies (testimonials, hero), o coral-glow como spotlight pontual e o deep para texturas heritage." isDark={isDark} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14 }}>
+              {GRADIENTS.map(g => <GradientCard key={g.token} {...g} isDark={isDark} />)}
+            </div>
+          </section>
+
+          {/* ── TYPOGRAPHY ── */}
+          <section data-section id="type" style={{ padding: `80px ${pad}`, borderBottom: `1px solid ${border}` }}>
+            <SectionHeader num="01.4 · Typography" title="Editorial" titleRed="& preciso." desc="Quatro famílias, cada uma com um trabalho. Network conduz a hierarquia editorial, ABC Whyte sustenta a UI, Inter cuida do texto longo." isDark={isDark} />
+
+            {/* Font families */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14, marginBottom: 56 }}>
+              {FONT_FAMILIES.map(f => (
+                <div key={f.name} style={{ background: secBg, borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 160 }}>
+                  <span style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.12em', color: muted }}>{f.role} · {f.name}</span>
+                  <span style={{ fontFamily: f.css, fontSize: f.role === 'Display' ? 56 : f.role === 'Heading' ? 32 : f.role === 'Mono' ? 18 : 28, lineHeight: 1, color: f.role === 'Display' ? '#EF3537' : text }}>
+                    {f.role === 'Display' ? 'Olá!' : f.role === 'Heading' ? 'Liderança' : f.role === 'Mono' ? '2021 — 2026' : f.name === 'ABCWhyte' ? 'David Hulle' : 'Body text'}
+                  </span>
+                  <span style={{ marginTop: 'auto', fontFamily: 'Inter, sans-serif', fontSize: 12, color: muted, lineHeight: 1.4 }}>{f.desc}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Type scale */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'clamp(90px,16%,150px) 1fr', rowGap: 16, columnGap: 36, alignItems: 'baseline' }}>
+              {TYPE_SCALE.map(t => (
+                <>
+                  <span key={`ti-${t.name}`} style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.12em', color: muted, paddingTop: 12, lineHeight: 1.5 }}>
+                    {t.name}<br />{t.size} / {t.lh}
+                  </span>
+                  <span key={`sp-${t.name}`} style={{ fontFamily: t.family, fontSize: t.size, lineHeight: t.lh, color: t.red ? '#EF3537' : text, textTransform: t.upper ? 'uppercase' : 'none', letterSpacing: t.upper ? '0.05em' : 'inherit', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: t.size > '30px' ? 'nowrap' : 'normal' }}>
+                    {t.specimen}
+                  </span>
+                </>
+              ))}
+            </div>
+          </section>
+
+          {/* ── SPACE & RADII ── */}
+          <section data-section id="space" style={{ padding: `80px ${pad}`, borderBottom: `1px solid ${border}` }}>
+            <SectionHeader num="01.5 · Space & Radii" title="Ritmo de" titleRed="4 pontos." desc="Tudo se encaixa em múltiplos de 4. O raio de 40px é a assinatura: cards de mídia, hero e testimonials. Os outros raios apenas dão suporte." isDark={isDark} />
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 56 }}>
+              {/* Spacing */}
+              <div>
+                <div style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.14em', color: muted, paddingBottom: 16, borderBottom: `1px solid ${border}`, marginBottom: 20 }}>Spacing scale · 4 · 8 · 12 · 16 · 24 · 32 · 40 · 48 · 64 · 80 · 96 · 128</div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+                  {SPACING.map(s => (
+                    <div key={s} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                      <div style={{ width: 14, height: Math.min(s, 96), background: '#EF3537', borderRadius: 3 }} />
+                      <span style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 8, color: muted, writingMode: 'vertical-rl', textOrientation: 'mixed' }}>{s}</span>
                     </div>
-                    <span style={{ fontSize: 13, fontFamily: 'ABCWhyte, sans-serif', color: text }}>{opt}</span>
-                  </label>
-                )
-              })}
-            </div>
-          </ComponentGroup>
-
-          {/* Avatar */}
-          <ComponentGroup title="Avatar" isDark={isDark} cardBg={cardBg} border={border}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'flex-end' }}>
-              {[20, 28, 36, 48, 64, 80].map(size => (
-                <div key={size} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                  <div style={{
-                    width: size, height: size, borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #9E0015, #EF3537)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#fff', fontFamily: 'ABCWhyteInktrap, sans-serif',
-                    fontWeight: 700, fontSize: Math.round(size * 0.36),
-                    flexShrink: 0,
-                  }}>
-                    {size >= 28 ? 'DH' : 'D'}
-                  </div>
-                  <span style={{ fontSize: 9, fontFamily: 'ABCWhyteMono, monospace', color: muted }}>{size}</span>
-                </div>
-              ))}
-              {/* With ring */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg, #9E0015, #EF3537)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: 'ABCWhyteInktrap, sans-serif', fontWeight: 700, fontSize: 17, outline: '2.5px solid #EF3537', outlineOffset: 3 }}>DH</div>
-                <span style={{ fontSize: 9, fontFamily: 'ABCWhyteMono, monospace', color: muted }}>ring</span>
-              </div>
-            </div>
-          </ComponentGroup>
-
-          {/* Dividers */}
-          <ComponentGroup title="Dividers" isDark={isDark} cardBg={cardBg} border={border}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 28, maxWidth: 480 }}>
-              <div>
-                <p style={{ margin: '0 0 10px', fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', color: muted }}>Default 1px</p>
-                <div style={{ height: 1, background: border }} />
-              </div>
-              <div>
-                <p style={{ margin: '0 0 10px', fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', color: muted }}>Brand accent</p>
-                <div style={{ height: 2, width: 48, background: '#EF3537', borderRadius: 1 }} />
-              </div>
-              <div>
-                <p style={{ margin: '0 0 10px', fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', color: muted }}>With label</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{ flex: 1, height: 1, background: border }} />
-                  <span style={{ fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', color: muted, whiteSpace: 'nowrap' }}>Section</span>
-                  <div style={{ flex: 1, height: 1, background: border }} />
+                  ))}
                 </div>
               </div>
+              {/* Radii */}
               <div>
-                <p style={{ margin: '0 0 10px', fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', color: muted }}>Gradient</p>
-                <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, #EF3537, transparent)' }} />
+                <div style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.14em', color: muted, paddingBottom: 16, borderBottom: `1px solid ${border}`, marginBottom: 20 }}>Corner radii · Signature: 40px ★</div>
+                <div style={{ display: 'flex', gap: 16, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                  {RADII.map(r => (
+                    <div key={r.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: r.sig ? 80 : 56, height: r.sig ? 80 : 56, background: r.sig ? '#9E0015' : '#EF3537', borderRadius: r.value, opacity: r.sig ? 1 : 0.75 }} />
+                      <span style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.08em', color: r.sig ? '#EF3537' : muted, fontWeight: r.sig ? 600 : 400 }}>{r.name}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </ComponentGroup>
+          </section>
 
-          {/* Progress */}
-          <ComponentGroup title="Progress Bars" isDark={isDark} cardBg={cardBg} border={border}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 500 }}>
-              {[25, 50, 75, 100].map(pct => (
-                <div key={pct}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <span style={{ fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', color: muted }}>Progress</span>
-                    <span style={{ fontSize: 11, fontFamily: 'ABCWhyteMono, monospace', color: pct === 100 ? '#16A34A' : '#EF3537' }}>{pct}%</span>
-                  </div>
-                  <div style={{ height: 4, borderRadius: 2, background: isDark ? '#1E1E1E' : '#E5E5E5' }}>
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${pct}%` }}
-                      transition={{ duration: 1, delay: pct * 0.005, ease: [0.16, 1, 0.3, 1] }}
-                      style={{ height: '100%', borderRadius: 2, background: pct === 100 ? '#16A34A' : '#EF3537' }}
-                    />
-                  </div>
+          {/* ── SHADOWS ── */}
+          <section data-section id="shadows" style={{ padding: `80px ${pad}`, borderBottom: `1px solid ${border}` }}>
+            <SectionHeader num="01.6 · Shadows" title="Profundidade" titleRed="& elevação." isDark={isDark} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 20 }}>
+              {SHADOWS.map(s => (
+                <div key={s.name}>
+                  <div style={{ height: 72, borderRadius: 12, background: cardBg, boxShadow: isDark ? s.dark : s.light, marginBottom: 12 }} />
+                  <div style={{ fontSize: 11, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 600, color: text, marginBottom: 3 }}>shadow-{s.name}</div>
+                  <div style={{ fontSize: 9, fontFamily: 'ABCWhyteMono, monospace', color: muted, wordBreak: 'break-word', lineHeight: 1.5 }}>{isDark ? s.dark : s.light}</div>
                 </div>
               ))}
             </div>
-          </ComponentGroup>
+          </section>
 
-          {/* Tooltip */}
-          <ComponentGroup title="Tooltip" isDark={isDark} cardBg={cardBg} border={border}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 32, paddingTop: 12, paddingBottom: 12 }}>
+          {/* ── VOICE ── */}
+          <section data-section id="voice" style={{ padding: `80px ${pad}`, borderBottom: `1px solid ${border}` }}>
+            <SectionHeader num="02 · Tone & Copy" title="Voz direta," titleRed="com peso." desc="Primeira pessoa, verbos no passado, dados como prova. Português conduz, inglês ancora termos de craft. Zero emoji. Pontuação como textura: · e — separam, !? dá ritmo." isDark={isDark} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
+              {VOICE_CARDS.map(v => (
+                <div key={v.label} style={{ background: secBg, borderRadius: 16, padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 12, minHeight: 180 }}>
+                  <span style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#EF3537' }}>{v.label}</span>
+                  {v.isDisplay ? (
+                    <span style={{ fontFamily: 'Network, cursive', fontSize: 56, lineHeight: 0.86, color: '#EF3537' }}>{v.main}</span>
+                  ) : (
+                    <span style={{ fontFamily: v.isMono ? 'ABCWhyteMono, monospace' : 'Inter, sans-serif', fontSize: v.isMono ? 14 : 15, lineHeight: 1.4, color: text, textTransform: v.isMono ? 'uppercase' : 'none', letterSpacing: v.isMono ? '0.06em' : 'inherit' }}>{v.main}</span>
+                  )}
+                  {v.sub && <span style={{ fontFamily: v.isMono ? 'ABCWhyteMono, monospace' : v.isDisplay ? 'ABCWhyte, sans-serif' : 'Inter, sans-serif', fontSize: v.isDisplay ? 18 : v.isMono ? 14 : 14, color: muted, lineHeight: 1.4, textTransform: v.isMono ? 'uppercase' : 'none', letterSpacing: v.isMono ? '0.06em' : 'inherit' }}>{v.sub}</span>}
+                  <span style={{ marginTop: 'auto', fontFamily: 'ABCWhyteMono, monospace', fontSize: 9, color: muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{v.note}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ── BUTTONS ── */}
+          <section data-section id="buttons" style={{ padding: `80px ${pad}`, borderBottom: `1px solid ${border}` }}>
+            <SectionHeader num="03.1 · Buttons" title="Quatro variantes," titleRed="dois tamanhos." desc="Dark, Light, Red e Subtle. Cada uma com Default, Hover e Active. Tudo em UPPERCASE ABCWhyte com tracking 0.05em." isDark={isDark} />
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
+
+              {/* Dark */}
+              <div style={{ background: secBg, borderRadius: 16, padding: 28, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'ABCWhyteMono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: muted }}>
+                  <span>Dark · Small</span><span>28h · 8px</span>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <button style={{ background: '#0A0A0A', color: '#F5F2EE', border: 0, borderRadius: 8, padding: '8px 12px', fontFamily: 'ABCWhyte, sans-serif', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>Button <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17L17 7M9 7h8v8"/></svg></button>
+                  <button style={{ background: '#333', color: '#F5F2EE', border: 0, borderRadius: 8, padding: '8px 12px', fontFamily: 'ABCWhyte, sans-serif', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>Hover</button>
+                  <button style={{ background: '#9E0015', color: '#F5F2EE', border: 0, borderRadius: 8, padding: '8px 12px', fontFamily: 'ABCWhyte, sans-serif', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>Active</button>
+                  <button disabled style={{ background: '#333', color: 'rgba(245,242,238,0.25)', border: 0, borderRadius: 8, padding: '8px 12px', fontFamily: 'ABCWhyte, sans-serif', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'not-allowed' }}>Disabled</button>
+                </div>
+              </div>
+
+              {/* Light (on dark surface) */}
+              <div style={{ background: '#191919', borderRadius: 16, padding: 28, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'ABCWhyteMono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'rgba(245,242,238,0.4)' }}>
+                  <span>Light · Small</span><span>on dark surface</span>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <button style={{ background: 'transparent', color: '#F5F2EE', border: '1px solid rgba(245,242,238,0.25)', borderRadius: 8, padding: '8px 12px', fontFamily: 'ABCWhyte, sans-serif', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>Button</button>
+                  <button style={{ background: 'rgba(255,255,255,0.1)', color: '#F5F2EE', border: '1px solid rgba(245,242,238,0.25)', borderRadius: 8, padding: '8px 12px', fontFamily: 'ABCWhyte, sans-serif', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>Hover</button>
+                  <button style={{ background: 'rgba(255,255,255,0.16)', color: '#F5F2EE', border: '1px solid rgba(245,242,238,0.3)', borderRadius: 8, padding: '8px 12px', fontFamily: 'ABCWhyte, sans-serif', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>Active</button>
+                </div>
+              </div>
+
+              {/* Red (primary CTA) */}
+              <div style={{ background: secBg, borderRadius: 16, padding: 28, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'ABCWhyteMono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: muted }}>
+                  <span>Red · Medium</span><span>primary CTA</span>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <button style={{ background: '#9E0015', color: '#F5F2EE', border: 0, borderRadius: 10, padding: '12px 18px', fontFamily: 'ABCWhyte, sans-serif', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7 }}>Contato <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17L17 7M9 7h8v8"/></svg></button>
+                  <button style={{ background: '#861D1E', color: '#F5F2EE', border: 0, borderRadius: 10, padding: '12px 18px', fontFamily: 'ABCWhyte, sans-serif', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>Hover</button>
+                  <button style={{ background: '#6B000E', color: '#FCDADA', border: 0, borderRadius: 10, padding: '12px 18px', fontFamily: 'ABCWhyte, sans-serif', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>Active</button>
+                </div>
+              </div>
+
+              {/* Subtle (on red surface) */}
+              <div style={{ background: '#9E0015', borderRadius: 16, padding: 28, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'ABCWhyteMono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'rgba(252,218,218,0.6)' }}>
+                  <span>Subtle · Medium</span><span>on red surface</span>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <button style={{ background: '#FCDADA', color: '#9E0015', border: 0, borderRadius: 10, padding: '12px 18px', fontFamily: 'ABCWhyte, sans-serif', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7 }}>Ler completo <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17L17 7M9 7h8v8"/></svg></button>
+                  <button style={{ background: '#FBC6C6', color: '#9E0015', border: 0, borderRadius: 10, padding: '12px 18px', fontFamily: 'ABCWhyte, sans-serif', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>Hover</button>
+                  <button style={{ background: '#EF3537', color: '#F5F2EE', border: 0, borderRadius: 10, padding: '12px 18px', fontFamily: 'ABCWhyte, sans-serif', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>Active</button>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          {/* ── TAGS & ICONS ── */}
+          <section data-section id="tags" style={{ padding: `80px ${pad}`, borderBottom: `1px solid ${border}` }}>
+            <SectionHeader num="03.2 · Tags & Icons" title="Glyphs" titleRed="& chips." desc="Botões-ícone em pill, sempre. Tags com canto 8px. Quatro superfícies cobrem todas as combinações de fundo claro/escuro." isDark={isDark} />
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
+
+              {/* Icon buttons */}
+              <div style={{ background: secBg, borderRadius: 16, padding: 28, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'ABCWhyteMono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: muted }}>
+                  <span>Icon Buttons</span><span>24 · 32 · 36 · 48px</span>
+                </div>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                  {[
+                    { bg: '#fff',     color: '#0A0A0A', brd: `1px solid ${border}`,         sz: 36, icon: '←' },
+                    { bg: '#fff',     color: '#0A0A0A', brd: `1px solid ${border}`,         sz: 36, icon: '→' },
+                    { bg: '#191919', color: '#F5F2EE', brd: 'none',                          sz: 36, icon: '☀' },
+                    { bg: '#9E0015', color: '#F5F2EE', brd: 'none',                          sz: 36, icon: '↗' },
+                    { bg: '#FCDADA', color: '#9E0015', brd: 'none',                          sz: 36, icon: '★' },
+                    { bg: '#191919', color: '#F5F2EE', brd: 'none',                          sz: 48, icon: '↗' },
+                  ].map((b, i) => (
+                    <button key={i} style={{ width: b.sz, height: b.sz, borderRadius: '50%', background: b.bg, color: b.color, border: b.brd, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: b.sz * 0.38, cursor: 'pointer', flexShrink: 0 }}>{b.icon}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tag pills */}
+              <div style={{ background: secBg, borderRadius: 16, padding: 28, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'ABCWhyteMono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: muted }}>
+                  <span>Tag Pills</span><span>8px radius · UPPER + 0.07em</span>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ display: 'inline-flex', padding: '6px 10px', borderRadius: 8, fontFamily: 'ABCWhyteMono, monospace', fontWeight: 500, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.07em', background: '#FCDADA', color: '#6B000E' }}>Finance</span>
+                  <span style={{ display: 'inline-flex', padding: '6px 10px', borderRadius: 8, fontFamily: 'ABCWhyteMono, monospace', fontWeight: 500, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.07em', background: '#FCDADA', color: '#6B000E' }}>Leadership</span>
+                  <span style={{ display: 'inline-flex', padding: '6px 10px', borderRadius: 8, fontFamily: 'ABCWhyteMono, monospace', fontWeight: 500, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.07em', background: '#191919', color: '#F5F2EE' }}>UX/UI</span>
+                  <span style={{ display: 'inline-flex', padding: '6px 10px', borderRadius: 8, fontFamily: 'ABCWhyteMono, monospace', fontWeight: 500, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.07em', background: '#191919', color: '#F5F2EE' }}>Ecommerce</span>
+                  <span style={{ display: 'inline-flex', padding: '6px 10px', borderRadius: 8, fontFamily: 'ABCWhyteMono, monospace', fontWeight: 500, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.07em', background: '#EF3537', color: '#F5F2EE' }}>Destaque</span>
+                  <span style={{ display: 'inline-flex', padding: '6px 10px', borderRadius: 8, fontFamily: 'ABCWhyteMono, monospace', fontWeight: 500, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.07em', background: 'transparent', color: text, border: `1px solid ${isDark ? 'rgba(245,242,238,0.25)' : 'rgba(10,10,10,0.25)'}` }}>Design System</span>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          {/* ── CARDS ── */}
+          <section data-section id="cards" style={{ padding: `80px ${pad}`, borderBottom: `1px solid ${border}` }}>
+            <SectionHeader num="03.3 · Cards" title="Superfícies" titleRed="& containers." isDark={isDark} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
+
+              {/* Default */}
+              <div style={{ padding: 24, borderRadius: 16, background: cardBg, border: `1px solid ${border}`, boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.06)' }}>
+                <span style={{ display: 'block', marginBottom: 8, fontSize: 9, fontFamily: 'ABCWhyteMono, monospace', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#EF3537' }}>Default</span>
+                <h3 style={{ margin: '0 0 8px', fontFamily: 'ABCWhyteInktrap, sans-serif', fontSize: 18, fontWeight: 700, color: text }}>Card title</h3>
+                <p style={{ margin: 0, fontFamily: 'Inter, sans-serif', fontSize: 13, lineHeight: 1.6, color: muted }}>Descrição que contextualiza o conteúdo do card de forma sucinta.</p>
+              </div>
+
+              {/* Project card */}
+              <div style={{ position: 'relative', aspectRatio: '1.5/1', borderRadius: 40, overflow: 'hidden', background: 'linear-gradient(180deg, #DF0000 0%, #E41B2A 35%, #E52741 60%, #EA445A 85%, #FC593C 100%)' }}>
+                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px', background: 'rgba(10,10,10,0.5)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                  <div>
+                    <div style={{ fontFamily: 'ABCWhyteInktrap, sans-serif', fontWeight: 700, fontSize: 13, color: '#F5F2EE', lineHeight: 1.15 }}>Mercado Pago</div>
+                    <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+                      {['Fintech','UX Lead'].map(t => <span key={t} style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 8, letterSpacing: '0.1em', padding: '3px 5px', borderRadius: 4, background: 'rgba(255,255,255,0.15)', color: '#F5F2EE', textTransform: 'uppercase' }}>{t}</span>)}
+                    </div>
+                  </div>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F5F2EE', fontSize: 14 }}>↗</div>
+                </div>
+              </div>
+
+              {/* Testimonial */}
+              <div style={{ padding: 22, borderRadius: 18, background: 'rgba(10,10,10,0.85)', color: '#F5F2EE', minHeight: 160 }}>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, lineHeight: 1.4, margin: '0 0 16px' }}>
+                  "David tem uma capacidade única de alinhar design e negócio com uma clareza impressionante."
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #FCDADA, #EF3537)', flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontFamily: 'ABCWhyte, sans-serif', fontWeight: 500, fontSize: 13, lineHeight: 1.1 }}>Maria Silva</div>
+                    <div style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 9, letterSpacing: '0.05em', opacity: 0.75, marginTop: 2, textTransform: 'uppercase' }}>Product Director · Mercado Pago</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Metric */}
+              <div style={{ padding: 24, borderRadius: 16, background: cardBg, border: `1px solid ${border}` }}>
+                <p style={{ margin: '0 0 2px', fontSize: 9, fontFamily: 'ABCWhyteMono, monospace', fontWeight: 500, color: muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Metric card</p>
+                <p style={{ margin: '0 0 4px', fontSize: 56, fontFamily: 'ABCWhyteInktrap, sans-serif', fontWeight: 700, color: '#EF3537', lineHeight: 1 }}>79%</p>
+                <p style={{ margin: 0, fontSize: 13, fontFamily: 'Inter, sans-serif', color: muted }}>Aumento de conversão</p>
+              </div>
+
+            </div>
+          </section>
+
+          {/* ── MOTION ── */}
+          <section data-section id="motion" style={{ padding: `80px ${pad}`, borderBottom: `1px solid ${border}` }}>
+            <SectionHeader num="03.4 · Motion" title="Easing" titleRed="& timing." desc="Clique nas barras para visualizar a curva em ação. expo-out é o padrão para todas as entradas." isDark={isDark} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {EASINGS.map(e => <EasingDemo key={e.name} {...e} isDark={isDark} cardBg={secBg} border={border} text={text} />)}
+            </div>
+          </section>
+
+          {/* ── FOOTER ── */}
+          <footer style={{ background: '#0A0A0A', color: '#F5F2EE', padding: `80px ${pad} 48px`, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 56, alignItems: 'end' }}>
+            <div>
+              <div style={{ fontFamily: 'Network, cursive', fontSize: 'clamp(64px,10vw,160px)', lineHeight: 0.86, color: '#EF3537' }}>Gostou!?</div>
+              <p style={{ fontFamily: 'ABCWhyte, sans-serif', fontWeight: 400, fontSize: 20, lineHeight: 1.3, margin: '16px 0 0', maxWidth: '28ch', color: '#F5F2EE' }}>
+                Use os tokens, copie os componentes, mantenha a marca em qualquer canal.
+              </p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
               {[
-                { label: 'Dark',    bg: '#0A0A0A',  color: '#F5F2EE', brd: 'none' },
-                { label: 'Light',   bg: '#FFFFFF',  color: '#0A0A0A', brd: `1px solid ${border}` },
-                { label: 'Brand',   bg: '#EF3537',  color: '#FFFFFF', brd: 'none' },
-              ].map(v => (
-                <div key={v.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                  <div style={{
-                    padding: '7px 13px', borderRadius: 7, fontSize: 11,
-                    fontFamily: 'ABCWhyte, sans-serif', fontWeight: 500,
-                    background: v.bg, color: v.color, border: v.brd,
-                    boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
-                  }}>
-                    Tooltip text
-                  </div>
-                  <span style={{ fontSize: 10, fontFamily: 'ABCWhyte, sans-serif', color: muted }}>{v.label}</span>
+                ['Source',    'davidhulle/portfolio'],
+                ['Version',   'v2 · May 2026'],
+                ['Contact',   'contato@davidhulle.com'],
+              ].map(([k, v]) => (
+                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid rgba(255,255,255,0.1)', fontFamily: 'ABCWhyte, sans-serif', fontSize: 14 }}>
+                  <span style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5 }}>{k}</span>
+                  <span style={{ color: '#FCDADA' }}>{v}</span>
                 </div>
               ))}
             </div>
-          </ComponentGroup>
-
-          {/* Navigation Items */}
-          <ComponentGroup title="Navigation" isDark={isDark} cardBg={cardBg} border={border}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, marginBottom: 16 }}>
-              {['Home', 'Projetos', 'Sobre', 'Jornada', 'Skills', 'Contato'].map((item, i) => (
-                <span key={item} style={{
-                  padding: '8px 14px', fontSize: 13, fontFamily: 'ABCWhyte, sans-serif', fontWeight: i === 0 ? 600 : 400,
-                  color: i === 0 ? '#EF3537' : text,
-                  borderBottom: `1.5px solid ${i === 0 ? '#EF3537' : 'transparent'}`,
-                  cursor: 'pointer',
-                }}>
-                  {item}
-                </span>
-              ))}
+            <div style={{ gridColumn: isMobile ? '1' : '1 / -1', paddingTop: 28, fontFamily: 'ABCWhyteMono, monospace', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.35, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+              <span>DH Design System · v2 · May 2026</span>
+              <span>© David Hulle · Built with intent</span>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {['Home', 'Projetos', 'Sobre'].map((item, i) => (
-                <span key={item} style={{
-                  padding: '8px 16px', fontSize: 12, fontFamily: 'ABCWhyte, sans-serif', fontWeight: 500,
-                  borderRadius: 8, cursor: 'pointer',
-                  background: i === 0 ? 'rgba(239,53,55,0.1)' : 'transparent',
-                  color: i === 0 ? '#EF3537' : text,
-                  border: `1px solid ${i === 0 ? 'rgba(239,53,55,0.2)' : border}`,
-                }}>
-                  {item}
-                </span>
-              ))}
-            </div>
-          </ComponentGroup>
+          </footer>
 
-          {/* Breadcrumb */}
-          <ComponentGroup title="Breadcrumb" isDark={isDark} cardBg={cardBg} border={border}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              {['Início', 'Projetos', 'Mercado Pago'].map((item, i, arr) => (
-                <span key={item} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 13, fontFamily: 'ABCWhyte, sans-serif', fontWeight: i === arr.length - 1 ? 600 : 400, color: i === arr.length - 1 ? text : muted, cursor: i < arr.length - 1 ? 'pointer' : 'default' }}>{item}</span>
-                  {i < arr.length - 1 && <span style={{ fontSize: 12, color: isDark ? 'rgba(245,242,238,0.2)' : 'rgba(10,10,10,0.2)' }}>/</span>}
-                </span>
-              ))}
-            </div>
-          </ComponentGroup>
-
-          {/* Alert / Banner */}
-          <ComponentGroup title="Alerts & Banners" isDark={isDark} cardBg={cardBg} border={border}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {[
-                { type: 'Success', bg: 'rgba(34,197,94,0.1)',  border: '1px solid rgba(34,197,94,0.25)',  color: '#16A34A', icon: '✓' },
-                { type: 'Warning', bg: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', color: '#D97706', icon: '!' },
-                { type: 'Info',    bg: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', color: '#2563EB', icon: 'i' },
-                { type: 'Error',   bg: 'rgba(239,53,55,0.08)', border: '1px solid rgba(239,53,55,0.2)',   color: '#EF3537', icon: '✕' },
-              ].map(a => (
-                <div key={a.type} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10, background: a.bg, border: a.border }}>
-                  <span style={{ width: 20, height: 20, borderRadius: '50%', background: a.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{a.icon}</span>
-                  <p style={{ margin: 0, fontSize: 13, fontFamily: 'ABCWhyte, sans-serif', color: a.color }}>
-                    <strong>{a.type}:</strong> Mensagem de feedback para o usuário.
-                  </p>
-                </div>
-              ))}
-            </div>
-          </ComponentGroup>
-
-        </DSSection>
-
-        {/* ── Footer ── */}
-        <div style={{ paddingTop: 40, borderTop: `1px solid ${border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-          <span style={{ fontFamily: 'ABCWhyteInktrap, sans-serif', fontSize: 15, fontWeight: 700, color: text }}>David Hulle</span>
-          <span style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 10, color: isDark ? 'rgba(245,242,238,0.25)' : 'rgba(10,10,10,0.25)' }}>Design System v1.0 · 2026</span>
-        </div>
-
+        </main>
       </div>
     </div>
   )
@@ -874,7 +724,6 @@ function DesignSystemContent() {
 
 export default function DesignSystem() {
   const [unlocked, setUnlocked] = useState(false)
-
   return (
     <AnimatePresence mode="wait">
       {!unlocked ? (

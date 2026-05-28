@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
-import { Component, useEffect } from 'react'
+import { Component, useEffect, useRef } from 'react'
 import { ThemeProvider } from './context/ThemeContext'
 import { LangProvider }  from './context/LangContext'
 import Home                from './pages/Home'
@@ -8,7 +8,9 @@ import { trackPageView }   from './lib/analytics'
 
 function PageTracker() {
   const location = useLocation()
+  const isFirst = useRef(true)
   useEffect(() => {
+    if (isFirst.current) { isFirst.current = false; return }
     trackPageView(location.pathname)
   }, [location.pathname])
   return null

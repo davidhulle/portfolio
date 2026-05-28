@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext'
 import { LangProvider }  from './context/LangContext'
 import Home                from './pages/Home'
 import ProjetoMercadoPago  from './pages/ProjetoMercadoPago'
+import DesignSystem         from './pages/DesignSystem'
 import { trackPageView }   from './lib/analytics'
 
 function PageTracker() {
@@ -46,6 +47,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/projeto/mercado-pago" element={<ProjetoMercadoPago />} />
+              <Route path="/design-system" element={<DesignSystem />} />
             </Routes>
           </BrowserRouter>
         </ThemeProvider>

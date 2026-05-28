@@ -15,6 +15,7 @@ const GA_ID = 'G-RXFHM5SNEH'
 const PAGE_TITLES = {
   '/':                     'Home | David Hulle',
   '/projeto/mercado-pago': 'Mercado Pago — UX Case Study | David Hulle',
+  '/design-system':        'Design System | David Hulle',
 }
 
 /** Dispara um page_view para a rota atual. Chamado automaticamente no App.jsx. */

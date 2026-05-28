@@ -1,9 +1,18 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { Component } from 'react'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { Component, useEffect } from 'react'
 import { ThemeProvider } from './context/ThemeContext'
 import { LangProvider }  from './context/LangContext'
 import Home                from './pages/Home'
 import ProjetoMercadoPago  from './pages/ProjetoMercadoPago'
+import { trackPageView }   from './lib/analytics'
+
+function PageTracker() {
+  const location = useLocation()
+  useEffect(() => {
+    trackPageView(location.pathname)
+  }, [location.pathname])
+  return null
+}
 
 class ErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { error: null } }
@@ -31,6 +40,7 @@ export default function App() {
       <LangProvider>
         <ThemeProvider>
           <BrowserRouter>
+            <PageTracker />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/projeto/mercado-pago" element={<ProjetoMercadoPago />} />

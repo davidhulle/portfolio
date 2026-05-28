@@ -4,6 +4,7 @@ import { useInView } from '../hooks/useInView'
 import { useTextStyle } from '../hooks/useTextStyle'
 import { useTheme } from '../context/ThemeContext'
 import { useLang } from '../context/LangContext'
+import { trackEvent } from '../lib/analytics'
 
 const ENTRIES_BASE = [
   {
@@ -332,6 +333,7 @@ export default function Journey() {
 
               {/* Ver jornada completa */}
               <motion.a
+                onClick={() => trackEvent('linkedin_click', { source: 'journey' })}
                 href="https://www.linkedin.com/in/david-hulle/"
                 target="_blank"
                 rel="noopener noreferrer"

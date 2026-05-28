@@ -155,3 +155,63 @@ Toda página criada em `src/pages/` deve:
 - [ ] Placeholders, cards e painéis têm variante dark
 - [ ] Sombras têm variante dark (mais opacas)
 - [ ] `transition: background-color 0.4s ease` no container raiz da página
+
+---
+
+## Analytics GA4 — regra de tagueamento obrigatório
+
+O projeto usa Google Analytics 4 via gtag.js. O arquivo central é `src/lib/analytics.js`.
+
+**Toda vez que uma página for criada ou alterada**, você deve obrigatoriamente:
+
+### 1. Nova página em `src/pages/`
+Adicionar a rota no mapa `PAGE_TITLES` em `src/lib/analytics.js`:
+
+```js
+const PAGE_TITLES = {
+  '/':                     'Home | David Hulle',
+  '/projeto/mercado-pago': 'Mercado Pago — UX Case Study | David Hulle',
+  '/nova-pagina':          'Título da Página | David Hulle',  // ← adicionar aqui
+}
+```
+
+A rota deve também estar registrada em `src/App.jsx` dentro de `<Routes>`.
+
+### 2. Novos CTAs / links externos relevantes
+Chamar `trackEvent()` em interações de valor:
+
+```js
+import { trackEvent } from '../lib/analytics'
+
+// Clique em projeto
+trackEvent('project_click', { project_name: 'Mercado Pago' })
+
+// Clique em canal de contato
+trackEvent('contact_click', { channel: 'linkedin' })
+
+// Clique em link externo do LinkedIn
+trackEvent('linkedin_click', { source: 'nome_da_secao' })
+
+// Troca de idioma
+trackEvent('language_change', { language: 'EN' })
+```
+
+### Eventos já implementados
+
+| Componente | Evento GA | Trigger |
+|---|---|---|
+| `Projects.jsx` | `project_click` | Clique num card de projeto |
+| `Contact.jsx` | `contact_click` | Clique em LinkedIn, Email ou WhatsApp |
+| `Journey.jsx` | `linkedin_click` | "Ver jornada completa" |
+| `Recommendations.jsx` | `linkedin_click` | Link do LinkedIn no modal/sheet |
+| `Navbar.jsx` | `language_change` | Troca de idioma (desktop e mobile) |
+
+### Ativação do GA
+O ID está como placeholder `G-XXXXXXXXXX`. Para ativar:
+1. Crie uma propriedade em analytics.google.com → copie o Measurement ID
+2. Substitua `G-XXXXXXXXXX` em **3 lugares**: `index.html` (2x) e `src/lib/analytics.js` (1x)
+
+### Checklist analytics ao entregar nova página
+- [ ] Rota adicionada em `PAGE_TITLES` em `src/lib/analytics.js`
+- [ ] Rota registrada em `<Routes>` no `App.jsx`
+- [ ] CTAs e links externos relevantes têm `trackEvent()`

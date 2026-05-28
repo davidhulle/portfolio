@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { motion, animate, useMotionValue, AnimatePresence,
          useScroll, useTransform, useSpring } from 'framer-motion'
 import { useInView } from '../hooks/useInView'
+import { trackEvent } from '../lib/analytics'
 import { useLang } from '../context/LangContext'
 
 /* ── Data ── */
@@ -222,6 +223,7 @@ function DesktopModal({ t, onClose }) {
               </p>
             </div>
             <a
+              onClick={() => trackEvent('linkedin_click', { source: 'recommendations' })}
               href={LINKEDIN_URL}
               target="_blank"
               rel="noreferrer"
@@ -364,6 +366,7 @@ function MobileBottomSheet({ t, onClose }) {
 
             {/* LinkedIn link */}
             <a
+              onClick={() => trackEvent('linkedin_click', { source: 'recommendations' })}
               href={LINKEDIN_URL}
               target="_blank"
               rel="noreferrer"

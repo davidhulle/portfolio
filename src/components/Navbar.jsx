@@ -3,6 +3,7 @@ import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import { useLang } from '../context/LangContext'
+import { trackEvent } from '../lib/analytics'
 
 const LANGUAGES = [
   { code: 'PT', label: 'Português' },
@@ -245,7 +246,7 @@ function LangSelect({ lang, setLang, pillBg, textColor, size = 'sm' }) {
               return (
                 <li key={code} role="option" aria-selected={isActive}>
                   <button
-                    onClick={() => { setLang(code); setOpen(false) }}
+                    onClick={() => { setLang(code); setOpen(false); trackEvent('language_change', { language: code }) }}
                     onMouseEnter={e => {
                       if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.07)'
                     }}
@@ -788,7 +789,7 @@ export default function Navbar() {
                         return (
                           <li key={code} role="option" aria-selected={isActive}>
                             <button
-                              onClick={() => { setLang(code); setLangSheetOpen(false) }}
+                              onClick={() => { setLang(code); setLangSheetOpen(false); trackEvent('language_change', { language: code }) }}
                               style={{
                                 ...btnReset,
                                 width:          '100%',

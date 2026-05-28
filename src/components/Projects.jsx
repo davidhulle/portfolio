@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion'
+import { trackEvent } from '../lib/analytics'
 import { useInView } from '../hooks/useInView'
 import { useTextStyle } from '../hooks/useTextStyle'
 import { useTheme } from '../context/ThemeContext'
@@ -317,7 +318,7 @@ export default function Projects() {
                 alignSelf:       'stretch',
                 cursor:          p.href !== '#' ? 'pointer' : 'grab',
               }}
-              onClick={() => { if (!dragState.current.moved && p.href !== '#') navigate(p.href) }}
+              onClick={() => { if (!dragState.current.moved && p.href !== '#') { trackEvent('project_click', { project_name: p.client, project_title: p.title }); navigate(p.href) } }}
               onMouseEnter={() => isDesktop && setHovered(p.id)}
               onMouseLeave={() => isDesktop && setHovered(null)}
             >

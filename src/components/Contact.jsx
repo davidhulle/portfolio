@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { useInView } from '../hooks/useInView'
 import { useLang } from '../context/LangContext'
 import { useTheme } from '../context/ThemeContext'
+import { trackEvent } from '../lib/analytics'
 
 const ROWS_BASE = [
   { labelKey: null,                label: 'LINKEDIN', value: '/in/davidhulle',        href: 'https://www.linkedin.com/in/david-hulle/', blank: true  },
@@ -82,6 +83,7 @@ export default function Contact() {
                   target={row.blank ? '_blank' : undefined}
                   rel={row.blank ? 'noopener noreferrer' : undefined}
                   aria-label={`${row.label}: ${row.value}`}
+              onClick={() => trackEvent('contact_click', { channel: row.label.toLowerCase() })}
                   initial={{ opacity: 0, x: 16 }}
                   animate={inView ? { opacity: 1, x: 0 } : {}}
                   transition={{ duration: 0.5, delay: 0.25 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}
@@ -178,6 +180,7 @@ export default function Contact() {
               target={row.blank ? '_blank' : undefined}
               rel={row.blank ? 'noopener noreferrer' : undefined}
               aria-label={`${row.label}: ${row.value}`}
+              onClick={() => trackEvent('contact_click', { channel: row.label.toLowerCase() })}
               initial={{ opacity: 0, y: 12 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: 0.2 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}

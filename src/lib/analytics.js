@@ -3,10 +3,10 @@
  *
  * Para ativar:
  * 1. Crie uma propriedade em analytics.google.com
- * 2. Copie o Measurement ID (formato G-XXXXXXXXXX)
- * 3. Substitua 'G-XXXXXXXXXX' abaixo e nos dois lugares em index.html
+ * 2. Copie o Measurement ID (formato G-RXFHM5SNEH)
+ * 3. Substitua 'G-RXFHM5SNEH' abaixo e nos dois lugares em index.html
  */
-const GA_ID = 'G-XXXXXXXXXX'
+const GA_ID = 'G-RXFHM5SNEH'
 
 /**
  * Mapa de rotas → títulos de página exibidos no GA.

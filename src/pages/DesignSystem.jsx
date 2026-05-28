@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from '../context/ThemeContext'
 
@@ -292,37 +292,71 @@ function PasswordGate({ onUnlock }) {
 
 // ─── Sidebar ─────────────────────────────────────────────────────────────────
 
-function Sidebar({ isDark }) {
-  const bg = isDark ? '#0F0F0F' : '#F0EDE9'
+function SidebarInner({ isDark, activeId, onClose }) {
+  const bg     = isDark ? '#0F0F0F' : '#F0EDE9'
   const border = isDark ? 'rgba(245,242,238,0.08)' : 'rgba(10,10,10,0.08)'
-  const text = isDark ? '#F5F2EE' : '#0A0A0A'
-  const muted = isDark ? 'rgba(245,242,238,0.35)' : 'rgba(10,10,10,0.35)'
-  const hover = isDark ? 'rgba(245,242,238,0.06)' : 'rgba(10,10,10,0.04)'
+  const text   = isDark ? '#F5F2EE' : '#0A0A0A'
+  const muted  = isDark ? 'rgba(245,242,238,0.32)' : 'rgba(10,10,10,0.32)'
+
+  function handleClick(id) {
+    if (onClose) onClose()
+    setTimeout(() => scrollTo(id), onClose ? 200 : 0)
+  }
 
   return (
-    <aside style={{ position: 'sticky', top: 0, height: '100vh', overflowY: 'auto', background: bg, borderRight: `1px solid ${border}`, padding: '28px 20px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* Brand */}
-      <a href="#hero" onClick={e => { e.preventDefault(); scrollTo('hero') }} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-        <img src="/logos/logo-simbolo.svg" alt="DH" width={24} height={28} style={{ filter: isDark ? 'brightness(0) invert(1)' : 'none', flexShrink: 0 }} />
-        <div>
-          <div style={{ fontFamily: 'ABCWhyte, sans-serif', fontWeight: 800, fontSize: 13, letterSpacing: '-0.01em', lineHeight: 1.1, color: text }}>DH Design System</div>
-          <div style={{ fontFamily: 'ABCWhyteMono, monospace', fontWeight: 400, fontSize: 8, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.5, marginTop: 2, color: text }}>v2 · May 2026</div>
-        </div>
-      </a>
+    <div style={{ width: '100%', height: '100%', background: bg, display: 'flex', flexDirection: 'column', gap: 24, padding: '28px 20px', overflowY: 'auto' }}>
 
-      {/* Nav groups */}
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: 20, fontFamily: 'ABCWhyteMono, monospace' }}>
+      {/* Brand row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <a href="#hero" onClick={e => { e.preventDefault(); handleClick('hero') }}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
+          <img src="/logos/logo-simbolo.svg" alt="DH" width={22} height={26}
+            style={{ filter: isDark ? 'brightness(0) invert(1)' : 'none', flexShrink: 0 }} />
+          <div>
+            <div style={{ fontFamily: 'ABCWhyte, sans-serif', fontWeight: 800, fontSize: 13, letterSpacing: '-0.01em', lineHeight: 1.1, color: text }}>DH Design System</div>
+            <div style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 8, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.5, marginTop: 2, color: text }}>v2 · May 2026</div>
+          </div>
+        </a>
+        {onClose && (
+          <button onClick={onClose} aria-label="Fechar menu"
+            style={{ width: 32, height: 32, borderRadius: '50%', border: `1px solid ${border}`, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: text }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {/* Nav */}
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         {NAV_GROUPS.map(g => (
-          <div key={g.label} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#EF3537', padding: '0 8px 4px' }}>{g.label}</span>
-            {g.items.map(item => (
-              <a key={item.id} href={`#${item.id}`}
-                onClick={e => { e.preventDefault(); scrollTo(item.id) }}
-                style={{ padding: '6px 8px', borderRadius: 6, fontSize: 12, color: text, textDecoration: 'none', transition: 'all 0.15s', display: 'block' }}
-                onMouseEnter={e => { e.currentTarget.style.background = hover; e.currentTarget.style.color = '#EF3537' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = text }}
-              >{item.label}</a>
-            ))}
+          <div key={g.label} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <span style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#EF3537', padding: '0 10px 6px' }}>{g.label}</span>
+            {g.items.map(item => {
+              const isActive = activeId === item.id
+              return (
+                <a key={item.id} href={`#${item.id}`}
+                  onClick={e => { e.preventDefault(); handleClick(item.id) }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 0,
+                    padding: '7px 0', paddingLeft: 10, paddingRight: 8,
+                    borderRadius: 7,
+                    fontFamily: 'ABCWhyteMono, monospace', fontSize: 12,
+                    color: isActive ? '#EF3537' : text,
+                    textDecoration: 'none',
+                    fontWeight: isActive ? 600 : 400,
+                    background: isActive ? (isDark ? 'rgba(239,53,55,0.08)' : 'rgba(239,53,55,0.06)') : 'transparent',
+                    borderLeft: `2px solid ${isActive ? '#EF3537' : 'transparent'}`,
+                    transition: 'all 0.15s',
+                    boxSizing: 'border-box',
+                  }}
+                  onMouseEnter={e => { if (!isActive) { e.currentTarget.style.color = '#EF3537'; e.currentTarget.style.background = isDark ? 'rgba(245,242,238,0.04)' : 'rgba(10,10,10,0.03)' } }}
+                  onMouseLeave={e => { if (!isActive) { e.currentTarget.style.color = text; e.currentTarget.style.background = 'transparent' } }}
+                >
+                  {item.label}
+                </a>
+              )
+            })}
           </div>
         ))}
       </nav>
@@ -333,25 +367,60 @@ function Sidebar({ isDark }) {
         Product Design Leader<br />
         <span style={{ opacity: 0.6 }}>davidhulle.com</span>
       </div>
+    </div>
+  )
+}
+
+function Sidebar({ isDark, activeId }) {
+  const border = isDark ? 'rgba(245,242,238,0.08)' : 'rgba(10,10,10,0.08)'
+  return (
+    <aside style={{ position: 'sticky', top: 0, height: '100vh', borderRight: `1px solid ${border}` }}>
+      <SidebarInner isDark={isDark} activeId={activeId} />
     </aside>
   )
 }
 
 // ─── Design System Content ───────────────────────────────────────────────────
 
+const ALL_SECTION_IDS = ['hero', 'brand', 'color', 'gradients', 'type', 'space', 'shadows', 'voice', 'buttons', 'tags', 'cards', 'motion']
+
 function DesignSystemContent() {
   const { isDark } = useTheme()
-  const [isMobile, setIsMobile] = useState(false)
-  const [toggleOn, setToggleOn] = useState(false)
-  const [radioVal, setRadioVal] = useState('a')
-  const [inputVal, setInputVal] = useState('')
+  const [isMobile, setIsMobile]     = useState(false)
+  const [activeId, setActiveId]     = useState('hero')
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [toggleOn, setToggleOn]     = useState(false)
+  const [radioVal, setRadioVal]     = useState('a')
+  const [inputVal, setInputVal]     = useState('')
 
+  // Breakpoint
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1024)
     check()
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
   }, [])
+
+  // Active section via IntersectionObserver
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      entries => {
+        entries.forEach(e => { if (e.isIntersecting) setActiveId(e.target.id) })
+      },
+      { rootMargin: '-15% 0px -75% 0px' }
+    )
+    ALL_SECTION_IDS.forEach(id => {
+      const el = document.getElementById(id)
+      if (el) obs.observe(el)
+    })
+    return () => obs.disconnect()
+  }, [])
+
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [mobileOpen])
 
   const bg     = isDark ? '#0A0A0A' : '#F5F2EE'
   const text   = isDark ? '#F5F2EE' : '#0A0A0A'
@@ -361,13 +430,83 @@ function DesignSystemContent() {
   const muted  = isDark ? 'rgba(245,242,238,0.5)'  : 'rgba(10,10,10,0.5)'
   const pad    = 'clamp(32px,6vw,80px)'
 
+  const sidebarBg  = isDark ? '#0F0F0F' : '#F0EDE9'
+  const sidebarBdr = isDark ? 'rgba(245,242,238,0.08)' : 'rgba(10,10,10,0.08)'
+
   return (
     <div style={{ minHeight: '100vh', background: bg, color: text, transition: 'background-color 0.4s ease, color 0.4s ease' }}>
 
-      {/* Grid: sidebar + main (desktop only) */}
+      {/* ── Mobile header bar ── */}
+      {isMobile && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
+          height: 52,
+          background: isDark ? 'rgba(15,15,15,0.92)' : 'rgba(240,237,233,0.92)',
+          backdropFilter: 'blur(16px)',
+          borderBottom: `1px solid ${sidebarBdr}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0 20px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <img src="/logos/logo-simbolo.svg" alt="DH" width={18} height={22}
+              style={{ filter: isDark ? 'brightness(0) invert(1)' : 'none' }} />
+            <span style={{ fontFamily: 'ABCWhyte, sans-serif', fontWeight: 800, fontSize: 13, color: text }}>Design System</span>
+            <span style={{ fontFamily: 'ABCWhyteMono, monospace', fontSize: 9, padding: '2px 6px', borderRadius: 4, background: 'rgba(239,53,55,0.12)', color: '#EF3537', textTransform: 'uppercase', letterSpacing: '0.08em' }}>v2</span>
+          </div>
+          <button
+            onClick={() => setMobileOpen(true)}
+            aria-label="Abrir menu de navegação"
+            style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${sidebarBdr}`, background: 'transparent', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5, color: text }}
+          >
+            <span style={{ width: 16, height: 1.5, background: 'currentColor', borderRadius: 1, display: 'block', transition: 'transform 0.2s' }} />
+            <span style={{ width: 16, height: 1.5, background: 'currentColor', borderRadius: 1, display: 'block' }} />
+            <span style={{ width: 10, height: 1.5, background: 'currentColor', borderRadius: 1, display: 'block', alignSelf: 'flex-start', marginLeft: 3 }} />
+          </button>
+        </div>
+      )}
+
+      {/* ── Mobile drawer + overlay ── */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={() => setMobileOpen(false)}
+              style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)' }}
+            />
+            {/* Drawer */}
+            <motion.div
+              key="drawer"
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', stiffness: 340, damping: 38 }}
+              style={{
+                position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 400,
+                width: 'min(280px, 85vw)',
+                background: sidebarBg,
+                borderRight: `1px solid ${sidebarBdr}`,
+                boxShadow: '4px 0 32px rgba(0,0,0,0.25)',
+              }}
+            >
+              <SidebarInner isDark={isDark} activeId={activeId} onClose={() => setMobileOpen(false)} />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Grid: sidebar + main ── */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '240px 1fr', minHeight: '100vh' }}>
 
-        {!isMobile && <Sidebar isDark={isDark} />}
+        {!isMobile && <Sidebar isDark={isDark} activeId={activeId} />}
+
+        {/* Offset main content on mobile to clear fixed header */}
+        <div style={{ paddingTop: isMobile ? 52 : 0 }}>
 
         <main id="hero">
 
@@ -715,7 +854,8 @@ function DesignSystemContent() {
           </footer>
 
         </main>
-      </div>
+        </div>{/* end padding wrapper */}
+      </div>{/* end grid */}
     </div>
   )
 }
